@@ -45,7 +45,7 @@ Finally, set-up the ansible-env:
 
 Run the module:
 
-    $ ansible/hacking/test-module -m ./mysql_query
+    $ ansible/hacking/test-module -m ./mysql_query -a "name=ansible-test table=key_value_example identifier_column=name identifier=a login_host=127.0.0.1 login_user=root login_password=secret value_column=value value=4"
 
 
 
