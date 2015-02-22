@@ -1,3 +1,5 @@
+DROP DATABASE IF EXISTS `ansible-test`;
+
 CREATE DATABASE `ansible-test`;
 
 USE `ansible-test`;
@@ -12,3 +14,6 @@ ALTER TABLE `key_value_example` ADD PRIMARY KEY (`id`);
 
 ALTER TABLE `key_value_example` MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
+insert into `key_value_example` values (DEFAULT, 'a', 0);
+insert into `key_value_example` values (DEFAULT, 'b', 0);
+insert into `key_value_example` values (DEFAULT, 'c', 0);
