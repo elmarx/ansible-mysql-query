@@ -1,7 +1,7 @@
 ansible-mysql-query
 ===================
 
-Ansible module to set values in a mysql table. Sometimes some web-applications require settings to be done in the database.
+Ansible module to set values in a mysql table, or insert records. Useful for webapplications that store configurations in database. E.g. icingaweb2 requires the initial user to be inserted into the database. The install-wizard could do it, but with ansible you want to automate installation ;)
 
 Requirements:
 - python bindings for mysql (python-mysqldb on Debian)
@@ -9,7 +9,7 @@ Requirements:
 Install
 -------
 
-Just put `mysql_query` into your library directory, or somewhere else in your module paths.
+Install via ansible-galaxy, *ansible-galaxy install zauberpony.mysql-query*, or manually put this repository into your *roles_path*.
 
 
 Development setup
