@@ -1,0 +1,10 @@
+---
+- hosts: all
+  sudo: yes
+  tasks:
+    - name: install software required to run tests
+      apt: pkg={{ item }}
+      with_items:
+        - mariadb-server
+        - python-nose
+        - python-mysqldb
