@@ -8,3 +8,10 @@
         - mariadb-server
         - python-nose
         - python-mysqldb
+
+    - name: create an ansible.cfg so it find's our module
+      copy:
+        dest: "~vagrant/.ansible.cfg"
+        content: |
+                  [defaults]
+                  library = /vagrant/library
