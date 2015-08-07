@@ -66,15 +66,10 @@ Vagrant.configure(2) do |config|
   # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", inline: <<-SHELL
      sudo apt-get update -qq
-     sudo apt-get install -qqy python-dev python-pip
+     sudo apt-get install -qqy python-dev python-pip > /dev/null
      sudo pip install -q ansible
+
+     ansible-playbook -i 'localhost,' /vagrant/tests/provisioning/playbook.yml --connection=local
   SHELL
-
-  config.vm.provision "ansible" do |ansible|
-    ansible.playbook = "tests/provisioning/playbook.yml"
-  end
-
-
-
 
 end
