@@ -3,10 +3,8 @@ import ansible.runner
 from ansible.inventory import Inventory
 
 
-class SetupTest(unittest.TestCase):
+class AnsibleTest(unittest.TestCase):
     def test_ping(self):
-        self.assertEqual(True, True)
-
         runner = ansible.runner.Runner(
             module_name='ping',
             module_args='',
