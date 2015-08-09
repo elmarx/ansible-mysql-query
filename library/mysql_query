@@ -128,10 +128,12 @@ def main():
             try:
                 update_record(db_connection.cursor(), table, identifier_column, identifier, value_column, value)
                 db_connection.commit()
-                db_connection.close()
+
                 module.exit_json(changed=True)
             except Exception, e:
                 module.fail_json(msg='updating the record failed: %s' % str(e))
+            finally:
+                db_connection.close()
 
     else:
         module.fail_json(msg='unknown action required')
