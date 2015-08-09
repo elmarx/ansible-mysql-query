@@ -30,6 +30,19 @@ class Fixture:
                 ) ENGINE=InnoDB;""")
         cur.close()
 
+    def insert_into_key_value_example(self, key, value):
+        cur = self.cursor()
+        cur.execute('insert into `key_value_example` values (DEFAULT, %s, %s);', (key, value))
+        self._connection.commit()
+        cur.close()
+
+    def count_key_value_example(self):
+        cur = self.cursor()
+        cur.execute('select COUNT(*) from `key_value_example`')
+        result = cur.fetchone()[0]
+        cur.close()
+        return result
+
     def close(self):
         if self._connection:
             self._connection.close()

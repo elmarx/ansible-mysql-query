@@ -1,6 +1,6 @@
 import unittest
-import ansible.runner
-from ansible.inventory import Inventory
+
+from tests import utils
 from tests.fixtures import Fixture
 
 class MysqlQueryTest(unittest.TestCase):
@@ -23,17 +23,24 @@ class MysqlQueryTest(unittest.TestCase):
             value='myValue',
         )
 
-        runner = ansible.runner.Runner(
-            module_name='mysql_query',
-            module_args=args,
-            inventory=Inventory(['localhost']),
-            transport='local',
-            check=True
+        result = utils.ansible_run(args)
+        self.assertTrue(result['contacted']['localhost']['changed'], 'a required change is detected')
+        self.assertEquals(self.f.count_key_value_example(), 0, 'no row has been inserted in check-mode')
+
+    def testCheckNoChangeRequired(self):
+        # insert a row that does not need to be updated
+        self.f.insert_into_key_value_example('myKey', 42)
+
+        args = dict(
+            login_user='root',
+            name='ansible-mysql-query-test',
+            table='key_value_example',
+            identifier_column='name',
+            identifier='myKey',
+            value_column='value',
+            value='42',
         )
 
-        result = runner.run()
-        self.assertTrue(result['contacted']['localhost']['changed'], 'a required change is detected')
-
-        cur = self.f.cursor()
-        cur.execute('select COUNT(*) from `key_value_example`')
-        self.assertEquals(cur.fetchone()[0], 0, 'no row has been inserted in checkmode')
+        result = utils.ansible_run(args)
+        self.assertFalse(result['contacted']['localhost']['changed'], 'no changed required is detected')
+        self.assertEquals(self.f.count_key_value_example(), 1, 'no additional row has been inserted in check-mode')
