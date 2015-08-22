@@ -39,7 +39,7 @@ class Fixture:
     def count_key_value_example(self):
         cur = self.cursor()
         cur.execute('select COUNT(*) from `key_value_example`')
-        result = cur.fetchone()[0]
+        (result,) = cur.fetchone()
         cur.close()
         return result
 
