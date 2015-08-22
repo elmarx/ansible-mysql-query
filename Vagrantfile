@@ -61,14 +61,15 @@ Vagrant.configure(2) do |config|
   #   push.app = "YOUR_ATLAS_USERNAME/YOUR_APPLICATION_NAME"
   # end
 
-  # Enable provisioning with a shell script. Additional provisioners such as
-  # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
-  # documentation for more information about their specific syntax and use.
+  # bootstrap ansible
   config.vm.provision "shell", inline: <<-SHELL
      sudo apt-get update -qq
      sudo apt-get install -qqy python-dev python-pip > /dev/null
      sudo pip install -q ansible
+  SHELL
 
+  # execute ansible INSIDE the box
+  config.vm.provision "shell", run: "always", inline: <<-SHELL
      ansible-playbook -i 'localhost,' /vagrant/tests/provisioning/playbook.yml --connection=local
   SHELL
 
