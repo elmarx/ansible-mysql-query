@@ -1,7 +1,34 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# vim: set ft=python:
+DOCUMENTATION = """
+    ---
+module: mysql_query
+author:
+    - 'Elmar Athmer'
+short_description: Insert/update/remove rows in a mysql table.
+description:
+  - 'This module set values in a mysql table, or insert records. Useful for webapplications that store configurations
+     in database. E.g. icingaweb2 requires the initial user to be inserted into the database.'
+options:
+  identifiers:
+    required: true
+    description:
+      - dictionary of values to identifier a row, i.e. determine if the row exists, needs to be updated etc.
+  values:
+    required: false
+    description:
+        - dictionary of values that should be 'enforced', i.e. either updated (if the row has been found by it's
+          identifiers) or used during insert
+  defaults:
+    required: false
+    description:
+        - dictionary of additional values that will be used iff an insert is required.
+"""
+
+EXAMPLES = """
+
+"""
 
 try:
     import MySQLdb
