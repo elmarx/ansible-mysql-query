@@ -17,8 +17,8 @@ class MysqlQueryCheckTest(unittest.TestCase):
             login_user='root',
             name='ansible-mysql-query-test',
             table='key_value_example',
-            identifiers='name=testInsertRequired_myKey',
-            values='value=42',
+            identifiers=dict(name='testInsertRequired_myKey'),
+            values=dict(value='42'),
         )
 
         result = utils.ansible_run(args)
@@ -34,8 +34,8 @@ class MysqlQueryCheckTest(unittest.TestCase):
             login_user='root',
             name='ansible-mysql-query-test',
             table='key_value_example',
-            identifiers='name=testNoChangeRequired_myKey',
-            values='value=42',
+            identifiers=dict(name='testNoChangeRequired_myKey'),
+            values=dict(value='42'),
         )
 
         result = utils.ansible_run(args)
@@ -51,8 +51,8 @@ class MysqlQueryCheckTest(unittest.TestCase):
             login_user='root',
             name='ansible-mysql-query-test',
             table='key_value_example',
-            identifiers='name=testUpdateRequired_myKey',
-            values='value=8',
+            identifiers=dict(name='testUpdateRequired_myKey'),
+            values=dict(value='8'),
         )
 
         result = utils.ansible_run(args)

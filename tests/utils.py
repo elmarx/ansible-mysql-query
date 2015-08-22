@@ -9,9 +9,14 @@ def ansible_run(args):
     :param args:
     :return:
     """
+    complex_args, module_args = [], []
+    for key, value in args.items():
+        (complex_args if isinstance(value, dict) else module_args).append((key, value))
+
     runner = ansible.runner.Runner(
         module_name='mysql_query',
-        module_args=args,
+        module_args=dict(module_args),
+        complex_args=dict(complex_args),
         inventory=Inventory(['localhost']),
         transport='local',
         check=True
