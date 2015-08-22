@@ -28,6 +28,17 @@ class MysqlQueryTest(unittest.TestCase):
         self.assertTrue(result['contacted']['localhost']['changed'], 'a required change is detected')
         self.assertEquals(self.f.count_key_value_example(), 0, 'no row has been inserted in check-mode')
 
+    def testFailForEmptyValues(self):
+        args = dict(
+            login_user='root',
+            name='ansible-mysql-query-test',
+            table='key_value_example',
+        )
+
+        result = utils.ansible_run(args)
+        self.assertTrue(result['failed'])
+        self.assertEqual(result['msg'], 'missing required arguments: values')
+
     def testCheckNoChangeRequired(self):
         # insert a row that does not need to be updated
         self.f.insert_into_key_value_example('myKey', 42)
