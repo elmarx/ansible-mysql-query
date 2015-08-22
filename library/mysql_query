@@ -15,25 +15,28 @@ UPDATE_REQUIRED=2
 NO_ACTION_REQUIRED=3
 
 
-def change_required(cursor, table, identifier_column, identifier, value_column, value):
-    query = "select %(value_column)s from %(table)s where %(id)s = '%(v)s'" % dict(
-            value_column=value_column,
-            table=table,
-            id=identifier_column,
-            v=identifier
-            )
-
-    res = cursor.execute(query)
-    if res == 0:
-        return INSERT_REQUIRED
-
-    (actual_value,) = cursor.fetchone()
-
-    # convert to string, as value configured by ansible is string, too
-    if str(actual_value) != value:
-        return UPDATE_REQUIRED
-
+def change_required(cursor, table, values):
     return NO_ACTION_REQUIRED
+
+    # query = "select %(value_column)s from %(table)s where %(id)s = '%(v)s'" % dict(
+    #         value_column=value_column,
+    #         table=table,
+    #         id=identifier_column,
+    #         v=identifier
+    #         )
+    #
+    #
+    # res = cursor.execute(query)
+    # if res == 0:
+    #     return INSERT_REQUIRED
+    #
+    # (actual_value,) = cursor.fetchone()
+    #
+    # # convert to string, as value configured by ansible is string, too
+    # if str(actual_value) != value:
+    #     return UPDATE_REQUIRED
+    #
+    # return NO_ACTION_REQUIRED
 
 def update_record(cursor, table, identifier_column, identifier, value_column, value):
     query = """UPDATE {0} SET {1} = %s WHERE {2} = %s""".format(table, value_column, identifier_column)
@@ -41,6 +44,11 @@ def update_record(cursor, table, identifier_column, identifier, value_column, va
     cursor.execute(query, (value, identifier))
 
 def build_connection_parameter(params):
+    """
+    fetch mysql connection parameters consumable by mysqldb.connect from module args or ~/.my.cnf if necessary
+    :param params:
+    :return:
+    """
     # TODO: read ~/.my.cnf, set sane defaults etc.
 
     # map: (ansible_param_name, mysql.connect's name)
@@ -54,7 +62,7 @@ def build_connection_parameter(params):
             ]
 
     t = [(mysql_name, params[ansible_name]) 
-            for (ansible_name, mysql_name) in param_name_map 
+            for (ansible_name, mysql_name) in param_name_map
             if ansible_name in params and params[ansible_name]
         ]
 
@@ -67,13 +75,6 @@ def connect(connection, module):
     except Exception, e:
         module.fail_json(msg="Error connecting to mysql database: %s" % str(e))
 
-# TODO:
-# - allow setting limit
-# - allow/disallow insert
-# - implement isert
-# - parse my.cnf like mysql_db module
-# - add ansible documentation
-
 def main():
     module = AnsibleModule(
         argument_spec = dict(
@@ -83,14 +84,15 @@ def main():
             login_port=dict(default=3306, type='int'),
             login_unix_socket=dict(default=None),
             name=dict(required=True, aliases=['db']),
-            state=dict(default="present", choices=["absent", "present"]),
-            table=dict(required=True, default=None),
-            identifier_column=dict(required=True, default=None),
-            identifier=dict(required=True, default=None),
+            state=dict(default="present", choices=['absent', 'present']),
+
+            table=dict(required=True),
+
+            values=dict(required=True, type='dict'),
+            defaults=dict(default=None, type='dict'),
+
+            allow_insert=dict(default=False, type='bool'),
             limit=dict(default=1, type='int'),
-            value_column=dict(required=True, default=None),
-            value=dict(required=True, default=None),
-            allow_insert=dict(type='bool', default=False)
         ),
         supports_check_mode=True
     )
@@ -106,37 +108,37 @@ def main():
     db_connection = connect(connection, module)
 
     table = mysql_quote_identifier(module.params['table'], 'table')
-    value_column = mysql_quote_identifier(module.params['value_column'], 'column')
-    identifier_column = mysql_quote_identifier(module.params['identifier_column'], 'column')
+    #value_column = mysql_quote_identifier(module.params['value_column'], 'column')
+    #identifier_column = mysql_quote_identifier(module.params['identifier_column'], 'column')
 
-    value = module.params['value']
-    identifier = module.params['identifier']
+    #value = module.params['value']
+    #identifier = module.params['identifier']
 
-    required_action = change_required(db_connection.cursor(), table, identifier_column, identifier, value_column, value)
+    required_action = change_required(db_connection.cursor(), table, {})
 
     if required_action == NO_ACTION_REQUIRED:
         module.exit_json(changed=False)
-    elif required_action == INSERT_REQUIRED:
-        if module.check_mode:
-            module.exit_json(changed=True, msg='No such record, need to insert')
-        else:
-            module.fail_json(msg='Inserting missing records is currently not implemented')
-    elif required_action == UPDATE_REQUIRED:
-        if module.check_mode:
-            module.exit_json(changed=True, msg='Records needs to be updated')
-        else:
-            try:
-                update_record(db_connection.cursor(), table, identifier_column, identifier, value_column, value)
-                db_connection.commit()
-
-                module.exit_json(changed=True)
-            except Exception, e:
-                module.fail_json(msg='updating the record failed: %s' % str(e))
-            finally:
-                db_connection.close()
-
-    else:
-        module.fail_json(msg='unknown action required')
+    # elif required_action == INSERT_REQUIRED:
+    #     if module.check_mode:
+    #         module.exit_json(changed=True, msg='No such record, need to insert')
+    #     else:
+    #         module.fail_json(msg='Inserting missing records is currently not implemented')
+    # elif required_action == UPDATE_REQUIRED:
+    #     if module.check_mode:
+    #         module.exit_json(changed=True, msg='Records needs to be updated')
+    #     else:
+    #         try:
+    #             update_record(db_connection.cursor(), table, identifier_column, identifier, value_column, value)
+    #             db_connection.commit()
+    #
+    #             module.exit_json(changed=True)
+    #         except Exception, e:
+    #             module.fail_json(msg='updating the record failed: %s' % str(e))
+    #         finally:
+    #             db_connection.close()
+    #
+    # else:
+    #     module.fail_json(msg='unknown action required')
 
     module.exit_json(**connection)
 
