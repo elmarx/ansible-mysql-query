@@ -3,7 +3,8 @@ from ansible.inventory import Inventory
 
 def ansible_run(args):
     """
-    run the mysql_query module with ansible against localhost
+    run the mysql_query module with ansible against localhost and return only the results for localhost (assuming
+    localhost was contacted successfully)
 
     :param args:
     :return:
@@ -16,4 +17,8 @@ def ansible_run(args):
         check=True
     )
 
-    return runner.run()
+    result = runner.run()
+    if result['contacted'].has_key('localhost'):
+        return result['contacted']['localhost']
+    else:
+        raise Exception('could not contact localhost at all')

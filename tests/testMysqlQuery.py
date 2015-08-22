@@ -40,5 +40,5 @@ class MysqlQueryTest(unittest.TestCase):
         )
 
         result = utils.ansible_run(args)
-        self.assertFalse(result['contacted']['localhost']['changed'], 'no changed required is detected')
+        self.assertFalse(result['changed'], 'no changed required is detected')
         self.assertEquals(self.f.count_key_value_example(), 1, 'no additional row has been inserted in check-mode')
