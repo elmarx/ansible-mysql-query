@@ -74,10 +74,35 @@ def change_required(cursor, table, identifiers, desired_values):
     # a record has been found but does not match the desired values
     return UPDATE_REQUIRED
 
+def execute_action(cursor, action, table, identifier, values, defaults):
+    """
+    when not running in check mode, this function carries out the required changes
+    :rtype: dict
+    :param cursor:
+    :param table:
+    :param identifier:
+    :param values:
+    :param defaults:
+    :return: a summary of the action done usable as kwargs for ansible
+    """
+    try:
+        if action == INSERT_REQUIRED:
+            return {'failed': True, 'msg': 'not yet implemented'}
+        elif action == UPDATE_REQUIRED:
+            return {'failed': True, 'msg': 'not yet implemented'}
+        else:
+            return {'failed': True, 'msg': 'Internal Error: unknown action required'}
+    except Exception, e:
+        return {'failed': True, 'msg': 'updating/inserting the record failed due to "%s".' % str(e)}
+
 def update_record(cursor, table, identifier_column, identifier, value_column, value):
     query = """UPDATE {0} SET {1} = %s WHERE {2} = %s""".format(table, value_column, identifier_column)
 
     cursor.execute(query, (value, identifier))
+
+def insert_record(param, table, identifiers, values, defaults):
+    pass
+
 
 def build_connection_parameter(params):
     """
@@ -106,6 +131,7 @@ def build_connection_parameter(params):
     return dict(t)
 
 def connect(connection, module):
+    # TODO: make this wrappable in a with: statements, looks cleaner in the main-function
     try:
         db_connection = MySQLdb.connect(**connection)
         return db_connection
@@ -151,9 +177,11 @@ def main():
     if module.params["state"] == "absent":
         module.fail_json(msg="state=absent is not yet implemented")
 
-    connection = build_connection_parameter(module.params)
-
-    db_connection = connect(connection, module)
+    exit_messages = {
+        INSERT_REQUIRED: dict(changed=True, msg='No such record, need to insert'),
+        UPDATE_REQUIRED: dict(changed=True, msg='Records needs to be updated'),
+        NO_ACTION_REQUIRED: dict(changed=False),
+    }
 
     # mysql_quote all identifiers and get the parameters into shape
     table = mysql_quote_identifier(module.params['table'], 'table')
@@ -161,33 +189,22 @@ def main():
     values = list(extract_column_value_maps(module.params['values']))
     defaults = list(extract_column_value_maps(module.params['defaults']))
 
+    db_connection = connect(build_connection_parameter(module.params), module)
+
+    # find out what needs to be done (independently of check-mode)
     required_action = change_required(db_connection.cursor(), table, identifiers, values)
 
-    if required_action == NO_ACTION_REQUIRED:
-        module.exit_json(changed=False)
-    elif required_action == INSERT_REQUIRED:
-        if module.check_mode:
-            module.exit_json(changed=True, msg='No such record, need to insert')
-    #     else:
-    #         module.fail_json(msg='Inserting missing records is currently not implemented')
-    elif required_action == UPDATE_REQUIRED:
-        if module.check_mode:
-            module.exit_json(changed=True, msg='Records needs to be updated')
-    #     else:
-    #         try:
-    #             update_record(db_connection.cursor(), table, identifier_column, identifier, value_column, value)
-    #             db_connection.commit()
-    #
-    #             module.exit_json(changed=True)
-    #         except Exception, e:
-    #             module.fail_json(msg='updating the record failed: %s' % str(e))
-    #         finally:
-    #             db_connection.close()
-    #
+    if module.check_mode:
+        exit_message = exit_messages[required_action]
     else:
-        module.fail_json(msg='internal error: unknown action required')
+        exit_message = execute_action(db_connection.cursor(), required_action, table, identifiers, values, defaults)
 
-    module.exit_json(**connection)
+    db_connection.close()
+
+    if exit_message.has_key('failed') and exit_message['failed']:
+        module.fail_json(**exit_message)
+    else:
+        module.exit_json(**exit_message)
 
 # include magic from lib/ansible/module_common.py
 #<<INCLUDE_ANSIBLE_MODULE_COMMON>>
