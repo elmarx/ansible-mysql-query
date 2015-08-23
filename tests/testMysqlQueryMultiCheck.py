@@ -24,7 +24,7 @@ class MysqlQueryMultiCheckTest(unittest.TestCase):
             values=dict(value1='8', value2='admin', value3="made up"),
         )
 
-        result = utils.ansible_run(args)
+        result = utils.ansible_check(args)
         self.assertTrue(result['changed'], 'a required change is detected')
         self.assertRegexpMatches(result['msg'], 'insert')
         self.assertEquals(self.f.count_multicolumn_example(), 0, 'no row has been inserted in check-mode')
@@ -43,7 +43,7 @@ class MysqlQueryMultiCheckTest(unittest.TestCase):
             values={'value1': '8', 'value2': 'admin', 'value3': "made up"},
         )
 
-        result = utils.ansible_run(args)
+        result = utils.ansible_check(args)
         self.assertIn('changed', result)
         self.assertFalse(result['changed'], 'no changed required is detected')
         self.assertEquals(self.f.count_multicolumn_example(), 1, 'no additional row has been inserted in check-mode')

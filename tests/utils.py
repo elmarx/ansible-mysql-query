@@ -1,7 +1,10 @@
 import ansible.runner
 from ansible.inventory import Inventory
 
-def ansible_run(args):
+def ansible_check(args):
+    return ansible_run(args, check=True)
+
+def ansible_run(args, check=False):
     """
     run the mysql_query module with ansible against localhost and return only the results for localhost (assuming
     localhost was contacted successfully)
@@ -19,7 +22,7 @@ def ansible_run(args):
         complex_args=dict(complex_args),
         inventory=Inventory(['localhost']),
         transport='local',
-        check=True
+        check=check
     )
 
     result = runner.run()

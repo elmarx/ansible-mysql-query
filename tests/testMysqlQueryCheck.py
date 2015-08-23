@@ -24,7 +24,7 @@ class MysqlQueryCheckTest(unittest.TestCase):
             values=dict(value='42'),
         )
 
-        result = utils.ansible_run(args)
+        result = utils.ansible_check(args)
         print(result)
         self.assertTrue(result['changed'], 'a required change is detected')
         self.assertRegexpMatches(result['msg'], 'insert')
@@ -44,7 +44,7 @@ class MysqlQueryCheckTest(unittest.TestCase):
             values=dict(value='42'),
         )
 
-        result = utils.ansible_run(args)
+        result = utils.ansible_check(args)
         self.assertIn('changed', result)
         self.assertFalse(result['changed'], 'no changed required is detected')
         self.assertEquals(self.f.count_key_value_example(), 1, 'no additional row has been inserted in check-mode')
@@ -63,7 +63,7 @@ class MysqlQueryCheckTest(unittest.TestCase):
             values=dict(value='8'),
         )
 
-        result = utils.ansible_run(args)
+        result = utils.ansible_check(args)
         self.assertIn('changed', result)
         self.assertTrue(result['changed'], 'a change (update) required is detected')
         self.assertRegexpMatches(result['msg'], 'update')
