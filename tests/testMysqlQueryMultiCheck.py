@@ -2,6 +2,7 @@ import unittest
 
 from tests import utils
 from tests.fixtures import Fixture
+from tests.settings import MYSQL_CONNECTION_PARAMS
 
 class MysqlQueryMultiCheckTest(unittest.TestCase):
     def setUp(self):
@@ -14,8 +15,10 @@ class MysqlQueryMultiCheckTest(unittest.TestCase):
 
     def testInsertRequired(self):
         args = dict(
-            login_user='root',
-            name='ansible-mysql-query-test',
+            login_user=MYSQL_CONNECTION_PARAMS['user'],
+            name=MYSQL_CONNECTION_PARAMS['db'],
+            login_password=MYSQL_CONNECTION_PARAMS['passwd'],
+            login_host=MYSQL_CONNECTION_PARAMS['host'],
             table='multicolumn_example',
             identifiers=dict(identifier1='elmar@athmer.org', identifier2='4', identifier3='testInsert'),
             values=dict(value1='8', value2='admin', value3="made up"),
@@ -31,8 +34,10 @@ class MysqlQueryMultiCheckTest(unittest.TestCase):
         self.f.insert_into_multicolumn_example(['elmar@athmer.org', 4, 'testNoChangeRequired'], [8, 'admin', 'made up'])
 
         args = dict(
-            login_user='root',
-            name='ansible-mysql-query-test',
+            login_user=MYSQL_CONNECTION_PARAMS['user'],
+            name=MYSQL_CONNECTION_PARAMS['db'],
+            login_password=MYSQL_CONNECTION_PARAMS['passwd'],
+            login_host=MYSQL_CONNECTION_PARAMS['host'],
             table='multicolumn_example',
             identifiers=dict(identifier1='elmar@athmer.org', identifier2='4', identifier3='testNoChangeRequired'),
             values={'value1': '8', 'value2': 'admin', 'value3': "made up"},

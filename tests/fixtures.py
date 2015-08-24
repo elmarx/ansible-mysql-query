@@ -1,24 +1,25 @@
 import MySQLdb as Db
+from tests.settings import MYSQL_CONNECTION_PARAMS
 
 
 class Fixture:
     def __init__(self):
-        self._username = 'root'
-        self._db = 'ansible-mysql-query-test'
         self._connection = None
 
     def cursor(self):
         if not self._connection:
-            self._connection = Db.connect(user=self._username, db=self._db)
+            self._connection = Db.connect(**MYSQL_CONNECTION_PARAMS)
 
         return self._connection.cursor()
 
     def create_database(self):
-        con = Db.connect(user=self._username)
+        create_connection_params = MYSQL_CONNECTION_PARAMS.copy()
+        db = create_connection_params.pop('db')
+        con = Db.connect(**create_connection_params)
 
         cur = con.cursor()
-        cur.execute('DROP DATABASE IF EXISTS `{0}`;'.format(self._db))
-        cur.execute('CREATE DATABASE `{0}`;'.format(self._db))
+        cur.execute('DROP DATABASE IF EXISTS `{0}`;'.format(db))
+        cur.execute('CREATE DATABASE `{0}`;'.format(db))
         cur.close()
 
     def create_key_value_example(self):
