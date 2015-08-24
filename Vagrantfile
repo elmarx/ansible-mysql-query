@@ -70,7 +70,7 @@ Vagrant.configure(2) do |config|
 
   # execute ansible INSIDE the box
   config.vm.provision "shell", run: "always", inline: <<-SHELL
-     ansible-playbook -i 'localhost,' /vagrant/tests/provisioning/playbook.yml --connection=local
+     ansible-playbook -i 'localhost,' /vagrant/tests/infrastructure/playbook.yml --connection=local
   SHELL
 
 end
