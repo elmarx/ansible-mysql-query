@@ -26,4 +26,4 @@ def ansible_run(args):
     if result['contacted'].has_key('localhost'):
         return result['contacted']['localhost']
     else:
-        raise Exception('could not contact localhost at all')
+        raise Exception('could not contact localhost at all: %s' % str(result['dark']['localhost']))
