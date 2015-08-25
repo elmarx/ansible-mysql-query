@@ -83,6 +83,7 @@ def change_required(cursor, table, identifiers, desired_values):
     # a record has been found but does not match the desired values
     return UPDATE_REQUIRED
 
+
 def execute_action(cursor, action, table, identifier, values, defaults):
     """
     when not running in check mode, this function carries out the required changes
@@ -104,10 +105,12 @@ def execute_action(cursor, action, table, identifier, values, defaults):
     except Exception, e:
         return {'failed': True, 'msg': 'updating/inserting the record failed due to "%s".' % str(e)}
 
+
 def update_record(cursor, table, identifier_column, identifier, value_column, value):
     query = """UPDATE {0} SET {1} = %s WHERE {2} = %s""".format(table, value_column, identifier_column)
 
     cursor.execute(query, (value, identifier))
+
 
 def insert_record(param, table, identifiers, values, defaults):
     pass
@@ -132,12 +135,13 @@ def build_connection_parameter(params):
             ('login_unix_socket', 'unix_socket')
             ]
 
-    t = [(mysql_name, params[ansible_name]) 
+    t = [(mysql_name, params[ansible_name])
             for (ansible_name, mysql_name) in param_name_map
             if ansible_name in params and params[ansible_name]
         ]
 
     return dict(t)
+
 
 def connect(connection, module):
     # TODO: make this wrappable in a with: statements, looks cleaner in the main-function
@@ -226,7 +230,7 @@ def main():
 
     db_connection.close()
 
-    if exit_message.has_key('failed') and exit_message['failed']:
+    if 'failed' in exit_message and exit_message['failed']:
         module.fail_json(**exit_message)
     else:
         module.exit_json(**exit_message)
