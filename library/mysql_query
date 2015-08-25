@@ -147,15 +147,27 @@ def connect(connection, module):
     except Exception, e:
         module.fail_json(msg="Error connecting to mysql database: %s" % str(e))
 
+
 def extract_column_value_maps(parameter):
     """
     extract mysql-quoted tuple-lists for parameters given as ansible params
     :param parameter:
     :return:
     """
+
+    def cast_if_necessary(v):
+        if isinstance(v, int):
+            return long(v)
+        if isinstance(v, str) and v.isdigit():
+            return long(v)
+
+        return v
+
     if parameter:
         for column, value in parameter.items():
-            yield (mysql_quote_identifier(column, 'column'), long(value) if value.isdigit() else value)
+            yield (mysql_quote_identifier(column, 'column'), cast_if_necessary(value))
+
+
 def failed(action):
     return action == ERR_NO_SUCH_TABLE
 
