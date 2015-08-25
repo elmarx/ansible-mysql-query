@@ -37,9 +37,10 @@ except ImportError:
 else:
     mysqldb_found = True
 
-INSERT_REQUIRED=1
-UPDATE_REQUIRED=2
-NO_ACTION_REQUIRED=3
+INSERT_REQUIRED = 1
+UPDATE_REQUIRED = 2
+NO_ACTION_REQUIRED = 3
+ERR_NO_SUCH_TABLE = 4
 
 
 def change_required(cursor, table, identifiers, desired_values):
@@ -61,7 +62,15 @@ def change_required(cursor, table, identifiers, desired_values):
         values=" AND ".join(map(lambda x: "%s='%s'" % x, identifiers)),
     )
 
-    res = cursor.execute(query)
+    try:
+        res = cursor.execute(query)
+    except MySQLdb.ProgrammingError, e:
+        (errcode, message) = e.args
+        if errcode == 1146:
+            return ERR_NO_SUCH_TABLE
+        else:
+            raise e
+
     if res == 0:
         return INSERT_REQUIRED
 
@@ -147,6 +156,9 @@ def extract_column_value_maps(parameter):
     if parameter:
         for column, value in parameter.items():
             yield (mysql_quote_identifier(column, 'column'), long(value) if value.isdigit() else value)
+def failed(action):
+    return action == ERR_NO_SUCH_TABLE
+
 
 def main():
     module = AnsibleModule(
@@ -177,24 +189,25 @@ def main():
     if module.params["state"] == "absent":
         module.fail_json(msg="state=absent is not yet implemented")
 
-    exit_messages = {
-        INSERT_REQUIRED: dict(changed=True, msg='No such record, need to insert'),
-        UPDATE_REQUIRED: dict(changed=True, msg='Records needs to be updated'),
-        NO_ACTION_REQUIRED: dict(changed=False),
-    }
-
     # mysql_quote all identifiers and get the parameters into shape
     table = mysql_quote_identifier(module.params['table'], 'table')
     identifiers = list(extract_column_value_maps(module.params['identifiers']))
     values = list(extract_column_value_maps(module.params['values']))
     defaults = list(extract_column_value_maps(module.params['defaults']))
 
+    exit_messages = {
+        INSERT_REQUIRED: dict(changed=True, msg='No such record, need to insert'),
+        UPDATE_REQUIRED: dict(changed=True, msg='Records needs to be updated'),
+        NO_ACTION_REQUIRED: dict(changed=False),
+        ERR_NO_SUCH_TABLE: dict(failed=True, msg='No such table %s' % table)
+    }
+
     db_connection = connect(build_connection_parameter(module.params), module)
 
     # find out what needs to be done (independently of check-mode)
     required_action = change_required(db_connection.cursor(), table, identifiers, values)
 
-    if module.check_mode:
+    if module.check_mode or failed(required_action):
         exit_message = exit_messages[required_action]
     else:
         exit_message = execute_action(db_connection.cursor(), required_action, table, identifiers, values, defaults)
