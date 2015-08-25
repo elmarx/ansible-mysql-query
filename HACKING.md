@@ -35,6 +35,6 @@ Start the mariadb container with *docker-compose*:
 
 Then tests are executable via:
 
-    $ MYSQL_HOST='127.0.0.1' MYSQL_PASSWORD=password nosetests tests/
+    $ ANSIBLE_LIBRARY=$PWD/library MYSQL_HOST=::1 MYSQL_PASSWORD=password nosetests tests/
 
 or configure PyCharm to execute your tests.
