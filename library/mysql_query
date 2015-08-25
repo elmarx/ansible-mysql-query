@@ -50,16 +50,16 @@ def change_required(cursor, table, identifiers, desired_values):
     :param table: name of the table to look into
     :type table: str
     :param identifiers: a list of tuples (column name, value) to use in where clause
-    :type identifiers: list
+    :type identifiers: dict
     :param desired_values: a list of tuples (column name, values) that the record should match
-    :type desired_values: list
+    :type desired_values: dict
     :return: one of INSERT_REQUIRED, UPDATE_REQUIRED or NO_ACTION_REQUIRED
     :rtype: int
     """
     query = "select %(columns)s from %(table)s where %(values)s" % dict(
         table=table,
-        columns=", ".join([c for c, v in desired_values]),
-        values=" AND ".join(map(lambda x: "%s='%s'" % x, identifiers)),
+        columns=", ".join(desired_values.keys()),
+        values=" AND ".join(map(lambda x: "%s='%s'" % x, identifiers.items())),
     )
 
     try:
@@ -75,7 +75,7 @@ def change_required(cursor, table, identifiers, desired_values):
         return INSERT_REQUIRED
 
     # bring the values argument into shape to compare directly to fetchone() result
-    expected_query_result = tuple([val for k, val in desired_values])
+    expected_query_result = tuple(desired_values.values())
     actual_result = cursor.fetchone()
     if expected_query_result == actual_result:
         return NO_ACTION_REQUIRED
@@ -207,9 +207,9 @@ def main():
 
     # mysql_quote all identifiers and get the parameters into shape
     table = mysql_quote_identifier(module.params['table'], 'table')
-    identifiers = list(extract_column_value_maps(module.params['identifiers']))
-    values = list(extract_column_value_maps(module.params['values']))
-    defaults = list(extract_column_value_maps(module.params['defaults']))
+    identifiers = dict(extract_column_value_maps(module.params['identifiers']))
+    values = dict(extract_column_value_maps(module.params['values']))
+    defaults = dict(extract_column_value_maps(module.params['defaults']))
 
     exit_messages = {
         INSERT_REQUIRED: dict(changed=True, msg='No such record, need to insert'),
