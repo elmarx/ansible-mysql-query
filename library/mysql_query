@@ -97,7 +97,7 @@ def execute_action(cursor, action, table, identifier, values, defaults):
     """
     try:
         if action == INSERT_REQUIRED:
-            return {'failed': True, 'msg': 'not yet implemented'}
+            return insert_record(cursor, table, identifier, values, defaults)
         elif action == UPDATE_REQUIRED:
             return {'failed': True, 'msg': 'not yet implemented'}
         else:
@@ -112,8 +112,19 @@ def update_record(cursor, table, identifier_column, identifier, value_column, va
     cursor.execute(query, (value, identifier))
 
 
-def insert_record(param, table, identifiers, values, defaults):
-    pass
+def insert_record(cursor, table, identifiers, values, defaults):
+    row_data = dict(identifiers.items() + values.items() + defaults.items())
+    value_placeholder = ", ".join(["%s"] * len(row_data))
+
+    query = "insert into {table} ({cols}) values ({value_placeholder})".format(
+        table=table,
+        cols=", ".join(row_data.keys()),
+        value_placeholder=value_placeholder,
+    )
+
+    cursor.execute(query, tuple(row_data.values()))
+    return dict(changed=True, msg='Successfully inserted a new row')
+
 
 
 def build_connection_parameter(params):
@@ -227,6 +238,7 @@ def main():
         exit_message = exit_messages[required_action]
     else:
         exit_message = execute_action(db_connection.cursor(), required_action, table, identifiers, values, defaults)
+        db_connection.commit()
 
     db_connection.close()
 
