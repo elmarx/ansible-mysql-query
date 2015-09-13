@@ -11,8 +11,8 @@ author:
     - 'Elmar Athmer'
 short_description: Insert/update/remove rows in a mysql table.
 description:
-  - 'This module sets values in a mysql table, or insert records. Useful for webapplications that store configurations
-     in database.'
+  - This module sets values in a mysql table, or insert records. Useful for webapplications that store configurations
+     in database.
 options:
   table:
     required: true
@@ -34,7 +34,39 @@ options:
 """
 
 EXAMPLES = """
+- name: update a row
+  mysql_query:
+    name: ansible-playbook-example
+    table: simple_table
+    login_host: ::1
+    login_user: root
+    login_password: password
+    identifiers:
+      identifier1: 4
+      identifier2: 'eight'
+    values:
+      value1: 16
+      value2: 'sixteen plus 1'
+    defaults:
+      default1: can be anything, will be ignored for update
+      default2: will not change
 
+- name: insert a row
+  mysql_query:
+    name: ansible-playbook-example
+    table: simple_table
+    login_host: ::1
+    login_user: root
+    login_password: password
+    identifiers:
+      identifier1: 14
+      identifier2: 'eighteen'
+    values:
+      value1: 115
+      value2: 'one-hundred-sixteen'
+    defaults:
+      default1: 125
+      default2: one-hundred-2
 """
 
 try:
