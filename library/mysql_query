@@ -99,17 +99,21 @@ def execute_action(cursor, action, table, identifier, values, defaults):
         if action == INSERT_REQUIRED:
             return insert_record(cursor, table, identifier, values, defaults)
         elif action == UPDATE_REQUIRED:
-            return {'failed': True, 'msg': 'not yet implemented'}
+            return update_record(cursor, table, identifier, values)
         else:
             return {'failed': True, 'msg': 'Internal Error: unknown action required'}
     except Exception, e:
         return {'failed': True, 'msg': 'updating/inserting the record failed due to "%s".' % str(e)}
 
 
-def update_record(cursor, table, identifier_column, identifier, value_column, value):
-    query = """UPDATE {0} SET {1} = %s WHERE {2} = %s""".format(table, value_column, identifier_column)
+def update_record(cursor, table, identifiers, values):
+    where = ' AND '.join(['{0} = %s'.format(column) for column in identifiers.keys()])
+    value = ', '.join(['{0} = %s'.format(column) for column in values.keys()])
 
-    cursor.execute(query, (value, identifier))
+    query = "UPDATE {0} set {1} where {2} limit 1".format(table, value, where)
+
+    cursor.execute(query, tuple(values.values() + identifiers.values()))
+    return dict(changed=True, msg='Successfully updated one row')
 
 
 def insert_record(cursor, table, identifiers, values, defaults):
@@ -124,7 +128,6 @@ def insert_record(cursor, table, identifiers, values, defaults):
 
     cursor.execute(query, tuple(row_data.values()))
     return dict(changed=True, msg='Successfully inserted a new row')
-
 
 
 def build_connection_parameter(params):

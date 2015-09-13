@@ -2,7 +2,6 @@ import unittest
 from tests import utils
 from tests.fixtures import Fixture
 from tests.fixtures import MYSQL_CONNECTION_PARAMS
-import time
 
 
 class MysqlQueryChangeTest(unittest.TestCase):
@@ -30,23 +29,29 @@ class MysqlQueryChangeTest(unittest.TestCase):
         result = utils.ansible_run(args)
         self.assertIn('changed', result)
         self.assertTrue(result['changed'], 'the database has been changed')
-        count = self.f.count_change_example()
         self.assertEquals(self.f.count_change_example(), 1, 'a row has been inserted')
+        row = self.f.query_change_example('do_backups', 4)
+        self.assertItemsEqual((8, 'fifteen'), row[3:5], 'values were inserted')
+        self.assertItemsEqual((16, 42, 'thirty-two'), row[5:8], 'row has been inserted with default values')
 
-    @unittest.skip('update is not yet implemented, let\'s test insert first')
     def testUpdateRequired(self):
-        self.f.insert_into_key_value_example('testUpdateRequired_myKey', 4)
+        self.f.insert_into_change_example(['do_syncs', '5'], [42, 'four'], [8, 16, 'bar'])
 
         args = dict(
-            login_user='root',
-            name='ansible-mysql-query-test',
-            table='key_value_example',
-            identifiers=dict(name='testUpdateRequired_myKey'),
-            values=dict(value='8'),
+            login_user=MYSQL_CONNECTION_PARAMS['user'],
+            name=MYSQL_CONNECTION_PARAMS['db'],
+            login_password=MYSQL_CONNECTION_PARAMS['passwd'],
+            login_host=MYSQL_CONNECTION_PARAMS['host'],
+            table='change_example',
+            identifiers=dict(setting_name='do_syncs', setting_group_id='5'),
+            values=dict(value1='43', value2='five'),
+            defaults=dict(default1=9, default2='miow', bogus='foo')
         )
 
         result = utils.ansible_run(args)
         self.assertIn('changed', result)
-        self.assertTrue(result['changed'], 'a change (update) required is detected')
-        self.assertRegexpMatches(result['msg'], 'update')
-        self.assertEquals(self.f.count_key_value_example(), 1, 'no additional row has been inserted in check-mode')
+        self.assertRegexpMatches(result['msg'], 'Successfully updated')
+        self.assertEquals(self.f.count_change_example(), 1, 'no additional row has been inserted')
+        row = self.f.query_change_example('do_syncs', '5')
+        self.assertItemsEqual((43, 'five'), row[3:5], 'values have been updated')
+        self.assertItemsEqual((8, 16, 'bar'), row[5:8], 'defaults have not been changed')

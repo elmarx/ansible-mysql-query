@@ -95,3 +95,10 @@ class Fixture:
 
     def count_change_example(self):
         return self._count('change_example')
+
+    def query_change_example(self, setting_name, setting_group_id):
+        cur = self.cursor()
+        cur.execute('select * from `change_example` where `setting_name` = %s and `setting_group_id` = %s', (setting_name, setting_group_id))
+        result = cur.fetchone()
+        cur.close()
+        return result
