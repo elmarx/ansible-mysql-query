@@ -1,0 +1,10 @@
+#!/usr/bin/env ansible-playbook
+---
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name: remove the demo database
+      mysql_db:
+        login_host: ::1
+        name: ansible-playbook-example
+        state: absent
