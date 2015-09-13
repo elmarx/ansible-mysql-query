@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from ansible.module_utils.database import *
+from contextlib import closing
 
 DOCUMENTATION = """
     ---
@@ -160,7 +161,6 @@ def build_connection_parameter(params):
 
 
 def connect(connection, module):
-    # TODO: make this wrappable in a with: statements, looks cleaner in the main-function
     try:
         db_connection = MySQLdb.connect(**connection)
         return db_connection
@@ -234,18 +234,15 @@ def main():
         ERR_NO_SUCH_TABLE: dict(failed=True, msg='No such table %s' % table)
     }
 
-    db_connection = connect(build_connection_parameter(module.params), module)
+    with closing(connect(build_connection_parameter(module.params), module)) as db_connection:
+        # find out what needs to be done (independently of check-mode)
+        required_action = change_required(db_connection.cursor(), table, identifiers, values)
 
-    # find out what needs to be done (independently of check-mode)
-    required_action = change_required(db_connection.cursor(), table, identifiers, values)
-
-    if module.check_mode or failed(required_action):
-        exit_message = exit_messages[required_action]
-    else:
-        exit_message = execute_action(db_connection.cursor(), required_action, table, identifiers, values, defaults)
-        db_connection.commit()
-
-    db_connection.close()
+        if module.check_mode or failed(required_action):
+            exit_message = exit_messages[required_action]
+        else:
+            exit_message = execute_action(db_connection.cursor(), required_action, table, identifiers, values, defaults)
+            db_connection.commit()
 
     if 'failed' in exit_message and exit_message.get('failed'):
         module.fail_json(**exit_message)
