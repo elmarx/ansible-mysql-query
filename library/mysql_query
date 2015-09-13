@@ -5,15 +5,19 @@ from ansible.module_utils.database import *
 from contextlib import closing
 
 DOCUMENTATION = """
-    ---
+---
 module: mysql_query
 author:
     - 'Elmar Athmer'
 short_description: Insert/update/remove rows in a mysql table.
 description:
-  - 'This module set values in a mysql table, or insert records. Useful for webapplications that store configurations
-     in database. E.g. icingaweb2 requires the initial user to be inserted into the database.'
+  - 'This module sets values in a mysql table, or insert records. Useful for webapplications that store configurations
+     in database.'
 options:
+  table:
+    required: true
+    description:
+      - table where to insert/update records
   identifiers:
     required: true
     description:
@@ -209,8 +213,8 @@ def main():
             values=dict(default=None, type='dict'),
             defaults=dict(default=None, type='dict'),
 
-            allow_insert=dict(default=False, type='bool'),
-            limit=dict(default=1, type='int'),
+            #allow_insert=dict(default=False, type='bool'),
+            #limit=dict(default=1, type='int'),
         ),
         supports_check_mode=True
     )
