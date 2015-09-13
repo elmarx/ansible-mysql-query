@@ -108,7 +108,7 @@ def execute_action(cursor, action, table, identifier, values, defaults):
         elif action == UPDATE_REQUIRED:
             return update_record(cursor, table, identifier, values)
         else:
-            return {'failed': True, 'msg': 'Internal Error: unknown action required'}
+            return {'failed': True, 'msg': 'Internal Error: unknown action "%s" required' % action}
     except Exception, e:
         return {'failed': True, 'msg': 'updating/inserting the record failed due to "%s".' % str(e)}
 
@@ -242,9 +242,11 @@ def main():
         # find out what needs to be done (independently of check-mode)
         required_action = change_required(db_connection.cursor(), table, identifiers, values)
 
-        if module.check_mode or failed(required_action):
+        # if we're in check mode, there's no action required, or we already failed: directly set the exit_message
+        if module.check_mode or required_action == NO_ACTION_REQUIRED or failed(required_action):
             exit_message = exit_messages[required_action]
         else:
+            # otherwise, execute the required action to get the exit message
             exit_message = execute_action(db_connection.cursor(), required_action, table, identifiers, values, defaults)
             db_connection.commit()
 

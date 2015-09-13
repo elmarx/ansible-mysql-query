@@ -55,3 +55,28 @@ class MysqlQueryChangeTest(unittest.TestCase):
         row = self.f.query_change_example('do_syncs', '5')
         self.assertItemsEqual((43, 'five'), row[3:5], 'values have been updated')
         self.assertItemsEqual((8, 16, 'bar'), row[5:8], 'defaults have not been changed')
+
+    def testNoChangeRequiredInNoCheckMode(self):
+        """
+        this is the case if no change is required, but we're not in check mode.
+        :return:
+        """
+        self.f.insert_into_change_example(['no change required', 3], [1, 'one'], [1, 2, 'three'])
+
+        args = dict(
+            login_user=MYSQL_CONNECTION_PARAMS['user'],
+            name=MYSQL_CONNECTION_PARAMS['db'],
+            login_password=MYSQL_CONNECTION_PARAMS['passwd'],
+            login_host=MYSQL_CONNECTION_PARAMS['host'],
+            table='change_example',
+            identifiers=dict(setting_name='no change required', setting_group_id=3),
+            values=dict(value1=1, value2='one')
+        )
+
+        result = utils.ansible_run(args)
+        self.assertIn('changed', result)
+        self.assertFalse(result['changed'])
+
+
+
+
