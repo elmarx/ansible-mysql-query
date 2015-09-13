@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from ansible.module_utils.database import *
+
 DOCUMENTATION = """
     ---
 module: mysql_query
@@ -141,18 +143,18 @@ def build_connection_parameter(params):
 
     # map: (ansible_param_name, mysql.connect's name)
     param_name_map = [
-            ('login_user', 'user'),
-            ('login_password', 'passwd'),
-            ('name', 'db'),
-            ('login_host', 'host'),
-            ('login_port', 'port'),
-            ('login_unix_socket', 'unix_socket')
-            ]
+        ('login_user', 'user'),
+        ('login_password', 'passwd'),
+        ('name', 'db'),
+        ('login_host', 'host'),
+        ('login_port', 'port'),
+        ('login_unix_socket', 'unix_socket')
+    ]
 
     t = [(mysql_name, params[ansible_name])
-            for (ansible_name, mysql_name) in param_name_map
-            if ansible_name in params and params[ansible_name]
-        ]
+         for (ansible_name, mysql_name) in param_name_map
+         if ansible_name in params and params[ansible_name]
+         ]
 
     return dict(t)
 
@@ -192,7 +194,7 @@ def failed(action):
 
 def main():
     module = AnsibleModule(
-        argument_spec = dict(
+        argument_spec=dict(
             login_user=dict(default=None),
             login_password=dict(default=None),
             login_host=dict(default="localhost"),
@@ -245,14 +247,13 @@ def main():
 
     db_connection.close()
 
-    if 'failed' in exit_message and exit_message['failed']:
+    if 'failed' in exit_message and exit_message.get('failed'):
         module.fail_json(**exit_message)
     else:
         module.exit_json(**exit_message)
 
-# include magic from lib/ansible/module_common.py
-#<<INCLUDE_ANSIBLE_MODULE_COMMON>>
 
-from ansible.module_utils.database import *
+from ansible.module_utils.basic import *
+
 if __name__ == '__main__':
     main()
