@@ -34,7 +34,7 @@ options:
 """
 
 EXAMPLES = """
-- name: update a row
+- name: update john@example.com's password and role
   mysql_query:
     name: ansible-playbook-example
     table: simple_table
@@ -42,14 +42,16 @@ EXAMPLES = """
     login_user: root
     login_password: password
     identifiers:
-      identifier1: 4
-      identifier2: 'eight'
+      some_id: 23
+      email: 'john@example.com'
     values:
-      value1: 16
-      value2: 'sixteen plus 1'
+      role: 'superadmin'
+      password:
+        function: PASSWORD(%s)
+        value: 'very_secret'
     defaults:
-      default1: can be anything, will be ignored for update
-      default2: will not change
+      department_id: 23 # will not be changed since this is no insert
+      last_login: 0
 
 - name: insert a row
   mysql_query:
@@ -59,14 +61,16 @@ EXAMPLES = """
     login_user: root
     login_password: password
     identifiers:
-      identifier1: 14
-      identifier2: 'eighteen'
+      some_id: 23
+      email: 'richard@example.com'
     values:
-      value1: 115
-      value2: 'one-hundred-sixteen'
+      role: 'ceo'
+      password:
+        function: PASSWORD(%s)
+        value: 'initial_password'
     defaults:
-      default1: 125
-      default2: one-hundred-2
+      department_id: 23
+      last_login: 100
 """
 
 try:
@@ -245,8 +249,8 @@ def main():
             values=dict(default=None, type='dict'),
             defaults=dict(default=None, type='dict'),
 
-            #allow_insert=dict(default=False, type='bool'),
-            #limit=dict(default=1, type='int'),
+            # allow_insert=dict(default=False, type='bool'),
+            # limit=dict(default=1, type='int'),
         ),
         supports_check_mode=True
     )

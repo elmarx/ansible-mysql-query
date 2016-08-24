@@ -34,20 +34,20 @@ A complete example that ensures a record is present in a given table.
         login_user: root
         login_password: password
         identifiers:
-          id: 14
+          some_id: 14
           email: 'john@example.com'
         values:
           role: "admin"
-          department: 'IT'
+          department_id: 42
         defaults:
           password: "secret"
           last_login: 1469264933
 ```
 
-Given a table `simple_table` with columns (*id*, *email*, *role*, *department*, *password*, *last_login*), this example would:
-- Look for a row *where id = 14 and email = 'john@example.com'*
-  - if the row does not exist: insert a row with id=14, email='john@example.com', role="admin", department="IT", password="secret", last_login=1469264933
-  - if the row does exist: check if the ***values*** (role, department) match the given values, if not: update
+Given a table `simple_table` with columns (*id*, *some_id*, *email*, *role*, *department_id*, *password*, *last_login*), this example would:
+- Look for a row *where some_id = 14 and email = 'john@example.com'*
+  - if the row does not exist: insert a row with id=14, email='john@example.com', role="admin", department_id=42, password="secret", last_login=1469264933
+  - if the row does exist: check if the ***values*** (role, department_id) match the given values, if not: update
 
 Thus:
 - *identifieres* are being used to check for existence and to find a row
