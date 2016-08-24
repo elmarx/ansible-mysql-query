@@ -208,6 +208,41 @@ def connect(connection, module):
         module.fail_json(msg="Error connecting to mysql database: %s" % str(e))
 
 
+def normalize_parameters(parameters):
+    """
+    normalize values as passed from playbooks to a list of dicts,
+    correctly typed and casted
+
+    {'password': {'function': 'PASSWORD(%s)', 'value': 'very_secret'}, 'role': 'superadmin'}
+        => [
+             {'column': 'password', 'placeholder': 'PASSWORD(%s)', 'value': 'very_secret'},
+             {'column': 'role', 'placeholder': '%s', 'value': 'superadmin'},
+         ]
+    :param parameters:
+    :return:
+    """
+    def normalize_value(v):
+        if isinstance(v, int):
+            return '%s', long(v)
+        if isinstance(v, str) and v.isdigit():
+            return '%s', long(v)
+        if isinstance(v, dict):
+            # TODO: raise an error/call module.fail if (not v has 'value'):
+            # if the user passes a dictionary, it should have an entry for key 'value'
+            return v.get('function', '%s'), normalize_value(v['value'])[1]
+        return '%s', v
+
+    def normalize_item(column, value):
+        (placeholder, v) = normalize_value(value)
+        return dict(
+            column=mysql_quote_identifier(column, 'column'),
+            placeholder=placeholder,
+            value=v,
+        )
+
+    return [normalize_item(*p) for p in parameters.items()]
+
+
 def extract_column_value_maps(parameter):
     """
     extract mysql-quoted tuple-lists for parameters given as ansible params
