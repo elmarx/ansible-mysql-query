@@ -92,13 +92,16 @@ def change_required(cursor, table, identifiers, desired_values):
     :param cursor: cursor object able to execute queries
     :param table: name of the table to look into
     :type table: str
-    :param identifiers: a list of tuples (column name, value) to use in where clause
-    :type identifiers: dict
-    :param desired_values: a list of tuples (column name, values) that the record should match
-    :type desired_values: dict
+    :param identifiers: a list of dicts (column, placeholder, value) to use in where clause
+    :type identifiers: List[dict]
+    :param desired_values: a list of dicts (column, placeholder, value) that the record should match
+    :type desired_values: List[dict]
     :return: one of INSERT_REQUIRED, UPDATE_REQUIRED or NO_ACTION_REQUIRED
     :rtype: int
     """
+
+    # TODO: use normalized type of identifiers and desired_values
+
     query = "select %(columns)s from %(table)s where %(values)s" % dict(
         table=table,
         columns=", ".join(desired_values.keys()),
@@ -150,6 +153,8 @@ def execute_action(cursor, action, table, identifier, values, defaults):
 
 
 def update_record(cursor, table, identifiers, values):
+    # TODO: use normalized type of identifiers and values
+
     where = ' AND '.join(['{0} = %s'.format(column) for column in identifiers.keys()])
     value = ', '.join(['{0} = %s'.format(column) for column in values.keys()])
 
@@ -160,6 +165,8 @@ def update_record(cursor, table, identifiers, values):
 
 
 def insert_record(cursor, table, identifiers, values, defaults):
+    # TODO: use normalized type of identifiers, values and defaults
+
     row_data = dict(identifiers.items() + values.items() + defaults.items())
     value_placeholder = ", ".join(["%s"] * len(row_data))
 
@@ -243,26 +250,6 @@ def normalize_parameters(parameters):
     return [normalize_item(*p) for p in parameters.items()]
 
 
-def extract_column_value_maps(parameter):
-    """
-    extract mysql-quoted tuple-lists for parameters given as ansible params
-    :param parameter:
-    :return:
-    """
-
-    def cast_if_necessary(v):
-        if isinstance(v, int):
-            return long(v)
-        if isinstance(v, str) and v.isdigit():
-            return long(v)
-
-        return v
-
-    if parameter:
-        for column, value in parameter.items():
-            yield (mysql_quote_identifier(column, 'column'), cast_if_necessary(value))
-
-
 def failed(action):
     return action == ERR_NO_SUCH_TABLE
 
@@ -298,9 +285,9 @@ def main():
 
     # mysql_quote all identifiers and get the parameters into shape
     table = mysql_quote_identifier(module.params['table'], 'table')
-    identifiers = dict(extract_column_value_maps(module.params['identifiers']))
-    values = dict(extract_column_value_maps(module.params['values']))
-    defaults = dict(extract_column_value_maps(module.params['defaults']))
+    identifiers = normalize_parameters(module.params['identifiers'])
+    values = normalize_parameters(module.params['values'])
+    defaults = normalize_parameters(module.params['defaults'])
 
     exit_messages = {
         INSERT_REQUIRED: dict(changed=True, msg='No such record, need to insert'),
