@@ -144,13 +144,15 @@ def change_required(cursor, table, identifiers, desired_values):
 def execute_action(cursor, action, table, identifier, values, defaults):
     """
     when not running in check mode, this function carries out the required changes
+    :param action: action to execute as determined by 'change_required'/check mode,
+                   must be one of INSERT_REQUIRED or UPDATE_REQUIRED
     :rtype: dict
     :param cursor:
     :param table:
     :param identifier:
     :param values:
     :param defaults:
-    :return: a summary of the action done usable as kwargs for ansible
+    :return: a summary of the action done, usable as kwargs for ansible
     """
     try:
         if action == INSERT_REQUIRED:
