@@ -165,15 +165,16 @@ def execute_action(cursor, action, table, identifier, values, defaults):
         return {'failed': True, 'msg': 'updating/inserting the record failed due to "{0}".'.format(str(e))}
 
 
-def update_record(cursor, table, identifiers, values):
-    # TODO: use normalized type of identifiers and values
+def update_record(cursor, table, identifiers, desired_values):
+    """
+    update records
+    """
+    filters = ' AND '.join(['{column} = {placeholder}'.format(**i) for i in identifiers])
+    updates = ', '.join(['{column} = {placeholder}'.format(**v) for v in desired_values])
 
-    where = ' AND '.join(['{0} = %s'.format(column) for column in identifiers.keys()])
-    value = ', '.join(['{0} = %s'.format(column) for column in values.keys()])
+    query = "UPDATE {0} set {1} where {2} limit 1".format(table, updates, filters)
 
-    query = "UPDATE {0} set {1} where {2} limit 1".format(table, value, where)
-
-    cursor.execute(query, tuple(values.values() + identifiers.values()))
+    cursor.execute(query, pluck('value', desired_values) + pluck('value', identifiers))
     return dict(changed=True, msg='Successfully updated one row')
 
 
