@@ -3,6 +3,7 @@
 
 from ansible.module_utils.database import *
 from contextlib import closing
+from operator import itemgetter
 
 DOCUMENTATION = """
 ---
@@ -86,6 +87,10 @@ NO_ACTION_REQUIRED = 3
 ERR_NO_SUCH_TABLE = 4
 
 
+def pluck(attr, lst):
+    return map(itemgetter(attr), lst)
+
+
 def change_required(cursor, table, identifiers, desired_values):
     """
     check if a change is required
@@ -100,16 +105,23 @@ def change_required(cursor, table, identifiers, desired_values):
     :rtype: int
     """
 
-    # TODO: use normalized type of identifiers and desired_values
+    # build the select-expression for each column that compares the actual value to the desired value
+    # (e.g. "column != %s" or "column != FUNCTION(%s)"),
+    # so MySQL yields '1' for each field that has the desired value and '0' for fields that require a change.
+    # We will join these per-column-expressions with OR so the query simply returns '1' if an update is required
+    projections = ['{0} != {1}'.format(dv['column'], dv['placeholder']) for dv in desired_values]
 
-    query = "select %(columns)s from %(table)s where %(values)s" % dict(
+    # build the filters (using the identifiers) for the where-statement
+    filters = ['{0} = {1}'.format(i['column'], i['placeholder']) for i in identifiers]
+
+    query = "select ({projections}) as is_update_required from {table} where {filters}".format(
         table=table,
-        columns=", ".join(desired_values.keys()),
-        values=" AND ".join(map(lambda x: "%s='%s'" % x, identifiers.items())),
+        projections=" OR ".join(projections),
+        filters=" AND ".join(filters),
     )
 
     try:
-        res = cursor.execute(query)
+        res_count = cursor.execute(query, pluck('value', desired_values) + pluck('value', identifiers))
     except MySQLdb.ProgrammingError, e:
         (errcode, message) = e.args
         if errcode == 1146:
@@ -117,17 +129,16 @@ def change_required(cursor, table, identifiers, desired_values):
         else:
             raise e
 
-    if res == 0:
+    # no record with such identifiers -> insert required
+    if res_count == 0:
         return INSERT_REQUIRED
 
-    # bring the values argument into shape to compare directly to fetchone() result
-    expected_query_result = tuple(desired_values.values())
-    actual_result = cursor.fetchone()
-    if expected_query_result == actual_result:
-        return NO_ACTION_REQUIRED
+    # check if the (only) selection 'is_update_require' (the boolean expression we built into the query) is true
+    if (1,) == cursor.fetchone():
+        return UPDATE_REQUIRED
 
-    # a record has been found but does not match the desired values
-    return UPDATE_REQUIRED
+    # record found and all fields match the desired values
+    return NO_ACTION_REQUIRED
 
 
 def execute_action(cursor, action, table, identifier, values, defaults):
