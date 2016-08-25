@@ -179,18 +179,16 @@ def update_record(cursor, table, identifiers, desired_values):
 
 
 def insert_record(cursor, table, identifiers, values, defaults):
-    # TODO: use normalized type of identifiers, values and defaults
+    columns = pluck('column', identifiers) + pluck('column', values) + pluck('column', defaults)
+    placeholder = pluck('placeholder', identifiers) + pluck('placeholder', values) + pluck('placeholder', defaults)
 
-    row_data = dict(identifiers.items() + values.items() + defaults.items())
-    value_placeholder = ", ".join(["%s"] * len(row_data))
-
-    query = "insert into {table} ({cols}) values ({value_placeholder})".format(
-        table=table,
-        cols=", ".join(row_data.keys()),
-        value_placeholder=value_placeholder,
+    query = "insert into {0} ({1}) values ({2})".format(
+        table,
+        ", ".join(columns),
+        ", ".join(placeholder),
     )
 
-    cursor.execute(query, tuple(row_data.values()))
+    cursor.execute(query, pluck('value', identifiers) + pluck('value', values) + pluck('value', defaults))
     return dict(changed=True, msg='Successfully inserted a new row')
 
 
