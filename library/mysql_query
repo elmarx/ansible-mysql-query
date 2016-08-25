@@ -158,9 +158,9 @@ def execute_action(cursor, action, table, identifier, values, defaults):
         elif action == UPDATE_REQUIRED:
             return update_record(cursor, table, identifier, values)
         else:
-            return {'failed': True, 'msg': 'Internal Error: unknown action "%s" required' % action}
+            return {'failed': True, 'msg': 'Internal Error: unknown action "{0}" required'.format(action)}
     except Exception, e:
-        return {'failed': True, 'msg': 'updating/inserting the record failed due to "%s".' % str(e)}
+        return {'failed': True, 'msg': 'updating/inserting the record failed due to "{0}".'.format(str(e))}
 
 
 def update_record(cursor, table, identifiers, values):
@@ -223,7 +223,7 @@ def connect(connection, module):
         db_connection = MySQLdb.connect(**connection)
         return db_connection
     except Exception, e:
-        module.fail_json(msg="Error connecting to mysql database: %s" % str(e))
+        module.fail_json(msg="Error connecting to mysql database: {0}".format(str(e)))
 
 
 def normalize_parameters(parameters):
@@ -304,7 +304,7 @@ def main():
         INSERT_REQUIRED: dict(changed=True, msg='No such record, need to insert'),
         UPDATE_REQUIRED: dict(changed=True, msg='Records needs to be updated'),
         NO_ACTION_REQUIRED: dict(changed=False),
-        ERR_NO_SUCH_TABLE: dict(failed=True, msg='No such table %s' % table)
+        ERR_NO_SUCH_TABLE: dict(failed=True, msg='No such table {0}'.format(table))
     }
 
     with closing(connect(build_connection_parameter(module.params), module)) as db_connection:
