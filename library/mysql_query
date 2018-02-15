@@ -103,7 +103,7 @@ def change_required(cursor, table, identifiers, desired_values):
 
     try:
         res = cursor.execute(query)
-    except MySQLdb.ProgrammingError, e:
+    except MySQLdb.ProgrammingError as e:
         (errcode, message) = e.args
         if errcode == 1146:
             return ERR_NO_SUCH_TABLE
@@ -141,7 +141,7 @@ def execute_action(cursor, action, table, identifier, values, defaults):
             return update_record(cursor, table, identifier, values)
         else:
             return {'failed': True, 'msg': 'Internal Error: unknown action "%s" required' % action}
-    except Exception, e:
+    except Exception as e:
         return {'failed': True, 'msg': 'updating/inserting the record failed due to "%s".' % str(e)}
 
 
@@ -200,7 +200,7 @@ def connect(connection, module):
     try:
         db_connection = MySQLdb.connect(**connection)
         return db_connection
-    except Exception, e:
+    except Exception as e:
         module.fail_json(msg="Error connecting to mysql database: %s" % str(e))
 
 
