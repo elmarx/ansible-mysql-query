@@ -1,34 +1,40 @@
 # Hacking mysql_query module/role
 
-This module is TDD. Although it's sometimes hard to debug and test everything, I think I found a nice setup for TDD-ansible-modules. I'll document this in detail in an upcoming blogpost (TODO: link the blogpost once published).
+This module is TDD, the setup is inspired by ansible 
+[module-unit-tests](http://docs.ansible.com/ansible/latest/dev_guide/developing_modules_general.html#unit-testing) 
+(although the tests here are no strict unit-tests, as they interact with a database).
 
-You can either run all tests inside a vagrant box or directly on your host.
 
-## local
+## development setup
 
-Currently this module only modifies the database, nothing critical, so it's safe to run tests on the host directly. Imagine you develop a module that changes system-files, you would not want the module to modify your host, would you? ;)
+### python virtualenv
 
-For local development/testing you'll need *python*, *ansible* and a *testrunner* (my recommendation: [nose](https://nose.readthedocs.org/en/latest/)). Default Debian-packages are fine. Additionally you'll need a mysql installation with a user that is capable of creating and dropping databases. Of course mysql installed from an apt-repository is fine, but I prefer a docker container to run server software.
+For python-development it's recommended to use [virtualenv](https://virtualenv.pypa.io/en/stable/).
 
-### packages to install (Debian)
+Combined with [direnv](https://direnv.net/) you just need to cd into this directory.
 
-Just for reference (or the lazy ones), install the following packages for the recommended setup:
+### required packages
 
-- ansible
-- docker-engine
-- docker-compose
-- python
-- python-nose
+Once your virtualenv is setup, install the required packages via:
 
-### workflow
+    $ pip install -r requirements.txt
+
+### database
+
+I recommend to use [docker-compose](https://docs.docker.com/compose/) for the development infrastructure, but any 
+MySQL/MariaDB-Server should do (e.g.: installed via your local package-manager, run via docker directly). 
 
 Start the mariadb container with *docker-compose*:
 
-    $ cd tests/infrastructure
     $ docker-compose up -d
 
 Then tests are executable via:
 
-    $ ANSIBLE_LIBRARY=$PWD/library MYSQL_HOST=::1 MYSQL_PASSWORD=password nosetests tests/
+    $ pytest tests/
 
-or configure PyCharm to execute your tests.
+or use your favorite IDE (e.g. PyCharm) to execute your tests. 
+
+If you don't use the docker-compose file, you might need to pass the db-connection settings via env, see `settings.py` 
+for available options, e.g:
+
+    $ MYSQL_PASSWORD=secret pytest tests/

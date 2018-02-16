@@ -94,6 +94,7 @@ galaxy_info:
   #  - all
   #  - etch
     - jessie
+    - stretch
   #  - lenny
   #  - squeeze
   #  - wheezy

@@ -3,7 +3,7 @@ Ansible Role: mysql_query
 
 Ansible module to set values in a mysql table, or insert records. Useful for web-applications that store configurations in database. E.g. icingaweb2 requires the initial user to be inserted into the database. The install-wizard could do it, but with ansible you want to automate installation ;)
 
-Listed at Ansible Galaxy Page as [zauberpony.mysql-query](https://galaxy.ansible.com/list#/roles/5106)
+Listed at Ansible Galaxy Page as [zauberpony.mysql-query](https://galaxy.ansible.com/zauberpony/mysql-query/).
 
 Install
 -------
