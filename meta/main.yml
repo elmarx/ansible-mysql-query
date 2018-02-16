@@ -3,7 +3,7 @@ galaxy_info:
   author: Elmar Athmer
   description: Contains mysql_query module to insert/update/delete a record in a mysql table
   license: GPLv3+
-  min_ansible_version: 1.9.2
+  min_ansible_version: 2.4.0
   platforms:
   #- name: EL
   #  versions:
