@@ -1,0 +1,17 @@
+language: python
+python:
+  - 2.7
+
+env:
+  - MYSQL_HOST="127.0.0.1"
+
+before_script:
+  - sudo service mysql stop
+  - docker-compose up -d
+  - sleep 10s # wait until mysql has been started
+
+script:
+  - pytest
+
+after_script:
+  - docker-compose down
