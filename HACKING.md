@@ -4,12 +4,6 @@ This module is TDD. Although it's sometimes hard to debug and test everything, I
 
 You can either run all tests inside a vagrant box or directly on your host.
 
-## vagrant
-
-The vagrant box should give you all you need: *python*, latest *ansible*, *mysql* etc. Of course provisioned by an ansible playbook.
-
-I recommend to use pycharm's [remote debugging](http://blog.jetbrains.com/pycharm/2013/03/how-pycharm-helps-you-with-remote-development/) to run tests.
-
 ## local
 
 Currently this module only modifies the database, nothing critical, so it's safe to run tests on the host directly. Imagine you develop a module that changes system-files, you would not want the module to modify your host, would you? ;)

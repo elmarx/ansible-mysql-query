@@ -56,6 +56,6 @@ Thus:
 
 ### Running the examples from sources
 
-Make sure you have a running mysql server (e.g.: use the *docker-compose.yml* in *tests/infrastructure*) and update the connection-parameters if necessary.
+Make sure you have a running mysql server (e.g.: use the *docker-compose.yml*-file) and update the connection-parameters if necessary.
 
 Run via `ansible-playbook -i demo.yml` (or even simpler `./demo.yml`) and undo (to start all over) with `ansible-playbook -i reset.yml`.
