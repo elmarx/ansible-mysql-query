@@ -1,32 +1,28 @@
-import ansible.runner
-from ansible.inventory import Inventory
+import json
 
-def ansible_check(args):
-    return ansible_run(args, check=True)
+from ansible.module_utils import basic
+from ansible.module_utils._text import to_bytes
 
-def ansible_run(args, check=False):
-    """
-    run the mysql_query module with ansible against localhost and return only the results for localhost (assuming
-    localhost was contacted successfully)
 
-    :param args:
-    :return:
-    """
-    complex_args, module_args = [], []
-    for key, value in args.items():
-        (complex_args if isinstance(value, dict) else module_args).append((key, value))
+def set_module_args(**kwargs):
+    args = json.dumps({'ANSIBLE_MODULE_ARGS': kwargs})
+    basic._ANSIBLE_ARGS = to_bytes(args)
 
-    runner = ansible.runner.Runner(
-        module_name='mysql_query',
-        module_args=dict(module_args),
-        complex_args=dict(complex_args),
-        inventory=Inventory(['localhost']),
-        transport='local',
-        check=check
-    )
 
-    result = runner.run()
-    if result['contacted'].has_key('localhost'):
-        return result['contacted']['localhost']
-    else:
-        raise Exception('could not contact localhost at all: %s' % str(result['dark']['localhost']))
+class AnsibleExitJson(Exception):
+    pass
+
+
+class AnsibleFailJson(Exception):
+    pass
+
+
+def exit_json(*args, **kwargs):
+    if 'changed' not in kwargs:
+        kwargs['changed'] = False
+    raise AnsibleExitJson(kwargs)
+
+
+def fail_json(*args, **kwargs):
+    kwargs['failed'] = True
+    raise AnsibleFailJson(kwargs)

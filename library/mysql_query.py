@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from ansible.module_utils.database import *
-from contextlib import closing
 
 DOCUMENTATION = """
 ---
-module: mysql_query
+module: mysql_query.py
 author:
     - 'Elmar Athmer'
 short_description: Insert/update/remove rows in a mysql table.
@@ -35,7 +33,7 @@ options:
 
 EXAMPLES = """
 - name: update a row
-  mysql_query:
+  mysql_query.py:
     name: ansible-playbook-example
     table: simple_table
     login_host: ::1
@@ -52,7 +50,7 @@ EXAMPLES = """
       default2: will not change
 
 - name: insert a row
-  mysql_query:
+  mysql_query.py:
     name: ansible-playbook-example
     table: simple_table
     login_host: ::1
@@ -69,12 +67,20 @@ EXAMPLES = """
       default2: one-hundred-2
 """
 
+from contextlib import closing
+from ansible.module_utils.basic import AnsibleModule
+
 try:
     import MySQLdb
 except ImportError:
     mysqldb_found = False
 else:
     mysqldb_found = True
+
+from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.database import mysql_quote_identifier
+from ansible.module_utils.mysql import mysql_connect, mysqldb_found
+from ansible.module_utils._text import to_native
 
 INSERT_REQUIRED = 1
 UPDATE_REQUIRED = 2
@@ -287,8 +293,6 @@ def main():
     else:
         module.exit_json(**exit_message)
 
-
-from ansible.module_utils.basic import *
 
 if __name__ == '__main__':
     main()
