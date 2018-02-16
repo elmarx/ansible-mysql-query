@@ -204,7 +204,7 @@ def connect(connection, module):
         module.fail_json(msg="Error connecting to mysql database: %s" % str(e))
 
 
-def extract_column_value_maps(parameter):
+def extract_column_value_maps(parameter, cast_values=True):
     """
     extract mysql-quoted tuple-lists for parameters given as ansible params
     :param parameter:
@@ -212,9 +212,9 @@ def extract_column_value_maps(parameter):
     """
 
     def cast_if_necessary(v):
-        if isinstance(v, int):
+        if isinstance(v, int) and cast_values:
             return long(v)
-        if isinstance(v, str) and v.isdigit():
+        if isinstance(v, str) and v.isdigit() and cast_values:
             return long(v)
 
         return v
@@ -238,6 +238,7 @@ def main():
             login_unix_socket=dict(default=None),
             name=dict(required=True, aliases=['db']),
             state=dict(default="present", choices=['absent', 'present']),
+            cast_values=dict(type='bool', required=False, default=True),
 
             table=dict(required=True),
 
@@ -260,7 +261,7 @@ def main():
     # mysql_quote all identifiers and get the parameters into shape
     table = mysql_quote_identifier(module.params['table'], 'table')
     identifiers = dict(extract_column_value_maps(module.params['identifiers']))
-    values = dict(extract_column_value_maps(module.params['values']))
+    values = dict(extract_column_value_maps(module.params['values'], module.params['cast_values']))
     defaults = dict(extract_column_value_maps(module.params['defaults']))
 
     exit_messages = {
