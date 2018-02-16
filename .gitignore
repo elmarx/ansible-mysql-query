@@ -1,1 +1,3 @@
 *.pyc
+.direnv
+.pytest_cache

@@ -1,0 +1,4 @@
+ansible==2.4.3.0
+MySQL-python==1.2.5
+pytest==3.4.0
+pytest-mock==1.6.3
