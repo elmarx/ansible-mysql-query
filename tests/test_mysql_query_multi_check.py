@@ -55,6 +55,28 @@ class MysqlQueryMultiCheckTest(unittest.TestCase):
             values={'value1': '8', 'value2': 'admin', 'value3': "made up"},
         )
 
+        with self.assertRaises(AnsibleExitJson) as e:
+            self.module.main()
+
+        result = e.exception.args[0]
+
+        self.assertIn('changed', result)
+        self.assertFalse(result['changed'], 'no changed required is detected')
+        self.assertEquals(self.f.count_multicolumn_example(), 1, 'no additional row has been inserted in check-mode')
+
+    def test_change_detection_for_digits_in_strings(self):
+        # insert a row that does not need to be updated
+        self.f.insert_into_multicolumn_example(['elmar@athmer.org', 4, '5'], [8, '15', '16'])
+
+        set_module_args(
+            login_user=MYSQL_CONNECTION_PARAMS['user'],
+            name=MYSQL_CONNECTION_PARAMS['db'],
+            login_password=MYSQL_CONNECTION_PARAMS['passwd'],
+            login_host=MYSQL_CONNECTION_PARAMS['host'],
+            table='multicolumn_example',
+            identifiers=dict(identifier1='elmar@athmer.org', identifier2='4', identifier3='5'),
+            values={'value1': '8', 'value2': '15', 'value3': "16"},
+        )
 
         with self.assertRaises(AnsibleExitJson) as e:
             self.module.main()

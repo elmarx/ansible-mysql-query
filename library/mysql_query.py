@@ -88,6 +88,35 @@ NO_ACTION_REQUIRED = 3
 ERR_NO_SUCH_TABLE = 4
 
 
+def weak_equals(a, b):
+    """
+    helper function to compare two values where one might be a string
+    :param a:
+    :param b:
+    :return:
+    """
+    # the simple case: a and b are of the same type, or of types that can be compared for equality (e.g.: int and float)
+    if type(a) == type(b) or a == b:
+        return a == b
+
+    # try to stringify both and compare then…
+    return str(a) == str(b)
+
+
+def tuples_weak_equals(a, b):
+    """
+    tests two tuples for weak equality
+    :param a:
+    :param b:
+    :return:
+    """
+    if len(a) == len(b):
+        pairs = zip(a, b)
+        return all([weak_equals(a, b) for a, b in pairs])
+
+    return False
+
+
 def change_required(cursor, table, identifiers, desired_values):
     """
     check if a change is required
@@ -122,7 +151,9 @@ def change_required(cursor, table, identifiers, desired_values):
     # bring the values argument into shape to compare directly to fetchone() result
     expected_query_result = tuple(desired_values.values())
     actual_result = cursor.fetchone()
-    if expected_query_result == actual_result:
+
+    # compare expected_query_result to actual_result with implicit casting
+    if tuples_weak_equals(expected_query_result, actual_result):
         return NO_ACTION_REQUIRED
 
     # a record has been found but does not match the desired values
@@ -216,18 +247,9 @@ def extract_column_value_maps(parameter):
     :param parameter:
     :return:
     """
-
-    def cast_if_necessary(v):
-        if isinstance(v, int):
-            return long(v)
-        if isinstance(v, str) and v.isdigit():
-            return long(v)
-
-        return v
-
     if parameter:
         for column, value in parameter.items():
-            yield (mysql_quote_identifier(column, 'column'), cast_if_necessary(value))
+            yield (mysql_quote_identifier(column, 'column'), value)
 
 
 def failed(action):
