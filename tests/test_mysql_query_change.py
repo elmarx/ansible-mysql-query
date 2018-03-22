@@ -73,6 +73,27 @@ class MysqlQueryChangeTest(unittest.TestCase):
         self.assertItemsEqual((43, 'five'), row[3:5], 'values have been updated')
         self.assertItemsEqual((8, 16, 'bar'), row[5:8], 'defaults have not been changed')
 
+    def test_delete_required(self):
+        self.f.insert_into_change_example(['do_syncs', '5'], [42, 'four'], [8, 16, 'bar'])
+
+        set_module_args(
+            login_user=MYSQL_CONNECTION_PARAMS['user'],
+            name=MYSQL_CONNECTION_PARAMS['db'],
+            login_password=MYSQL_CONNECTION_PARAMS['passwd'],
+            login_host=MYSQL_CONNECTION_PARAMS['host'],
+            table='change_example',
+            identifiers=dict(setting_name='do_syncs', setting_group_id='5'),
+            state='absent'
+        )
+
+        with self.assertRaises(AnsibleExitJson) as e:
+            self.module.main()
+
+        result = e.exception.args[0]
+        self.assertIn('changed', result)
+        self.assertRegexpMatches(result['msg'], 'Successfully deleted')
+        self.assertEquals(self.f.count_change_example(), 0, 'all rows have been deleted')
+
     def test_no_change_required_in_no_check_mode(self):
         """
         this is the case if no change is required, but we're not in check mode.

@@ -18,7 +18,7 @@ python bindings for mysql ([python-mysqldb](https://packages.debian.org/jessie/p
 Example playbook
 ----------------
 
-A complete example that ensures a record is present in a given table.
+### A complete example that ensures a record is present in a given table.
 
 ```yaml
 ---
@@ -53,6 +53,27 @@ Thus:
 - *identifieres* are being used to check for existence and to find a row
 - *defaults* are being used as default values if the row is not present (i.e.: only used for insert)
 - *values* are the state of the row that ansible ensures
+
+### A complete example that ensures a record is not present in a given table.
+
+```yaml
+---
+- hosts: all
+  roles:
+    - zauberpony.mysql-query
+  tasks:
+    - name: insert a row
+      mysql_query:
+        state: absent
+        name: ansible-playbook-example
+        table: simple_table
+        login_host: ::1
+        login_user: root
+        login_password: password
+        identifiers:
+          id: 14
+          email: 'john@example.com'
+```
 
 ### Running the examples from sources
 

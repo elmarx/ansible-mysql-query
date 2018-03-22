@@ -82,6 +82,7 @@ from ansible.module_utils.database import mysql_quote_identifier
 from ansible.module_utils.mysql import mysql_connect, mysqldb_found
 from ansible.module_utils._text import to_native
 
+DELETE_REQUIRED = 0
 INSERT_REQUIRED = 1
 UPDATE_REQUIRED = 2
 NO_ACTION_REQUIRED = 3
@@ -117,7 +118,7 @@ def tuples_weak_equals(a, b):
     return False
 
 
-def change_required(cursor, table, identifiers, desired_values):
+def change_required(state, cursor, table, identifiers, desired_values):
     """
     check if a change is required
     :param cursor: cursor object able to execute queries
@@ -127,12 +128,12 @@ def change_required(cursor, table, identifiers, desired_values):
     :type identifiers: dict
     :param desired_values: a list of tuples (column name, values) that the record should match
     :type desired_values: dict
-    :return: one of INSERT_REQUIRED, UPDATE_REQUIRED or NO_ACTION_REQUIRED
+    :return: one of DELETE_REQUIRED, INSERT_REQUIRED, UPDATE_REQUIRED or NO_ACTION_REQUIRED
     :rtype: int
     """
     query = "select %(columns)s from %(table)s where %(values)s" % dict(
         table=table,
-        columns=", ".join(desired_values.keys()),
+        columns=", ".join(desired_values.keys()) if state == 'present' else '*',
         values=" AND ".join(map(lambda x: "%s='%s'" % x, identifiers.items())),
     )
 
@@ -144,6 +145,9 @@ def change_required(cursor, table, identifiers, desired_values):
             return ERR_NO_SUCH_TABLE
         else:
             raise e
+
+    if state == 'absent':
+        return NO_ACTION_REQUIRED if res == 0 else DELETE_REQUIRED
 
     if res == 0:
         return INSERT_REQUIRED
@@ -172,6 +176,8 @@ def execute_action(cursor, action, table, identifier, values, defaults):
     :return: a summary of the action done usable as kwargs for ansible
     """
     try:
+        if action == DELETE_REQUIRED:
+            return delete_record(cursor, table, identifier)
         if action == INSERT_REQUIRED:
             return insert_record(cursor, table, identifier, values, defaults)
         elif action == UPDATE_REQUIRED:
@@ -179,7 +185,7 @@ def execute_action(cursor, action, table, identifier, values, defaults):
         else:
             return {'failed': True, 'msg': 'Internal Error: unknown action "%s" required' % action}
     except Exception as e:
-        return {'failed': True, 'msg': 'updating/inserting the record failed due to "%s".' % str(e)}
+        return {'failed': True, 'msg': 'updating/inserting/deleting the record failed due to "%s".' % str(e)}
 
 
 def update_record(cursor, table, identifiers, values):
@@ -204,6 +210,13 @@ def insert_record(cursor, table, identifiers, values, defaults):
 
     cursor.execute(query, tuple(row_data.values()))
     return dict(changed=True, msg='Successfully inserted a new row')
+
+
+def delete_record(cursor, table, identifiers):
+    where = ' AND '.join(['{0} = %s'.format(column) for column in identifiers.keys()])
+    query = "DELETE FROM {0} WHERE {1}".format(table, where)
+    cursor.execute(query, tuple(identifiers.values()))
+    return dict(changed=True, msg='Successfully deleted one row')
 
 
 def build_connection_parameter(params):
@@ -282,8 +295,8 @@ def main():
     if not mysqldb_found:
         module.fail_json(msg="the python mysqldb module is required")
 
-    if module.params["state"] == "absent":
-        module.fail_json(msg="state=absent is not yet implemented")
+    if module.params["state"] == "absent" and module.params["values"]:
+        module.fail_json(msg="state=absent does not need values")
 
     # mysql_quote all identifiers and get the parameters into shape
     table = mysql_quote_identifier(module.params['table'], 'table')
@@ -292,6 +305,7 @@ def main():
     defaults = dict(extract_column_value_maps(module.params['defaults']))
 
     exit_messages = {
+        DELETE_REQUIRED: dict(changed=True, msg='Record needs to be deleted'),
         INSERT_REQUIRED: dict(changed=True, msg='No such record, need to insert'),
         UPDATE_REQUIRED: dict(changed=True, msg='Records needs to be updated'),
         NO_ACTION_REQUIRED: dict(changed=False),
@@ -300,7 +314,7 @@ def main():
 
     with closing(connect(build_connection_parameter(module.params), module)) as db_connection:
         # find out what needs to be done (independently of check-mode)
-        required_action = change_required(db_connection.cursor(), table, identifiers, values)
+        required_action = change_required(module.params['state'], db_connection.cursor(), table, identifiers, values)
 
         # if we're in check mode, there's no action required, or we already failed: directly set the exit_message
         if module.check_mode or required_action == NO_ACTION_REQUIRED or failed(required_action):
