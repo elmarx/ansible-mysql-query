@@ -86,3 +86,26 @@ class MysqlQueryCheckTest(unittest.TestCase):
         self.assertTrue(result['changed'], 'a change (update) required is detected')
         self.assertRegexpMatches(result['msg'], 'update')
         self.assertEquals(self.f.count_key_value_example(), 1, 'no additional row has been inserted in check-mode')
+
+    def test_delete_required(self):
+        # insert a row that need to deleted.
+        self.f.insert_into_key_value_example('testDeleteRequired_myKey', 6)
+
+        set_module_args(
+            login_user=MYSQL_CONNECTION_PARAMS['user'],
+            name=MYSQL_CONNECTION_PARAMS['db'],
+            login_password=MYSQL_CONNECTION_PARAMS['passwd'],
+            login_host=MYSQL_CONNECTION_PARAMS['host'],
+            table='key_value_example',
+            identifiers=dict(name='testDeleteRequired_myKey'),
+            state='absent',
+            _ansible_check_mode=True,
+        )
+
+        with self.assertRaises(AnsibleExitJson) as e:
+            self.module.main()
+
+        result = e.exception.args[0]
+        self.assertTrue(result['changed'], 'a required change is detected')
+        self.assertRegexpMatches(result['msg'], 'delete')
+        self.assertEquals(self.f.count_key_value_example(), 1, 'no row has been deleted in check-mode')
