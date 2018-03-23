@@ -295,9 +295,6 @@ def main():
     if not mysqldb_found:
         module.fail_json(msg="the python mysqldb module is required")
 
-    if module.params["state"] == "absent" and module.params["values"]:
-        module.fail_json(msg="state=absent does not need values")
-
     # mysql_quote all identifiers and get the parameters into shape
     table = mysql_quote_identifier(module.params['table'], 'table')
     identifiers = dict(extract_column_value_maps(module.params['identifiers']))
