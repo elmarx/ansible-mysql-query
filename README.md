@@ -18,7 +18,7 @@ python bindings for mysql ([python-mysqldb](https://packages.debian.org/jessie/p
 Example playbook
 ----------------
 
-### A complete example that ensures a record is present in a given table.
+### A complete example that ensures a record is present in a given table.
 
 ```yaml
 ---
