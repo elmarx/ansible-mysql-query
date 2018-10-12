@@ -134,7 +134,7 @@ def change_required(state, cursor, table, identifiers, desired_values):
     query = "select %(columns)s from %(table)s where %(values)s" % dict(
         table=table,
         columns=", ".join(desired_values.keys()) if state == 'present' else '*',
-        values=" AND ".join(map(lambda x: "%s='%s'" % x, identifiers.items())),
+        values=" AND ".join(map(lambda x: ("%s=%s" if type(x[1]) == int else "%s='%s'") % x, identifiers.items())),
     )
 
     try:
