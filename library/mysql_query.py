@@ -118,6 +118,19 @@ def tuples_weak_equals(a, b):
     return False
 
 
+def generate_where_segment(items):
+    """
+    generate a part of an sql statement
+    :param items: key-value items representing column/values
+    :return: the part to insert after "where"
+    """
+    return [
+        "%s=%s" % (name, value) if type(value) == int
+        else "%s='%s'" % (name, value)
+        for (name, value) in items
+    ]
+
+
 def check_row_exists(cursor, table, identifiers):
     """
     check a specified row only for existence
@@ -128,7 +141,7 @@ def check_row_exists(cursor, table, identifiers):
     """
     query = "select exists(select 1 from {table} where {values})".format(
         table=table,
-        values=" AND ".join(["%s='%s'" % x for x in identifiers.items()]),
+        values=" AND ".join(generate_where_segment(identifiers.items())),
     )
 
     try:
@@ -178,7 +191,7 @@ def change_required(state, cursor, table, identifiers, desired_values):
     query = "select {columns} from {table} where {values}".format(
         table=table,
         columns=", ".join(desired_values.keys()),
-        values=" AND ".join(["%s='%s'" % x for x in identifiers.items()]),
+        values=" AND ".join(generate_where_segment(identifiers.items())),
     )
 
     try:
