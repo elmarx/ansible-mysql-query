@@ -30,8 +30,10 @@ class Fixture:
         cur.execute(query, args)
         self._connection.commit()
         cur.close()
+        return cur.lastrowid
 
-    def create_database(self):
+    @staticmethod
+    def create_database():
         create_connection_params = MYSQL_CONNECTION_PARAMS.copy()
         db = create_connection_params.pop('db')
         con = Db.connect(**create_connection_params)
@@ -78,14 +80,15 @@ class Fixture:
         cur.close()
 
     def insert_into_key_value_example(self, key, value):
-        self._insert('insert into `key_value_example` values (DEFAULT, %s, %s);', (key, value))
+        return self._insert('insert into `key_value_example` values (DEFAULT, %s, %s);', (key, value))
 
     def insert_into_multicolumn_example(self, ids, vals):
-        self._insert("insert into `multicolumn_example` values (DEFAULT, %s, %s, %s, %s, %s, %s);", tuple(ids + vals))
+        return self._insert("insert into `multicolumn_example` values (DEFAULT, %s, %s, %s, %s, %s, %s);",
+                            tuple(ids + vals))
 
     def insert_into_change_example(self, ids, vals, defaults):
-        self._insert("insert into `change_example` values (DEFAULT, %s, %s, %s, %s, %s, %s, %s);",
-                     tuple(ids + vals + defaults))
+        return self._insert("insert into `change_example` values (DEFAULT, %s, %s, %s, %s, %s, %s, %s);",
+                            tuple(ids + vals + defaults))
 
     def count_multicolumn_example(self):
         return self._count('multicolumn_example')
@@ -98,7 +101,8 @@ class Fixture:
 
     def query_change_example(self, setting_name, setting_group_id):
         cur = self.cursor()
-        cur.execute('select * from `change_example` where `setting_name` = %s and `setting_group_id` = %s', (setting_name, setting_group_id))
+        cur.execute('select * from `change_example` where `setting_name` = %s and `setting_group_id` = %s',
+                    (setting_name, setting_group_id))
         result = cur.fetchone()
         cur.close()
         return result
