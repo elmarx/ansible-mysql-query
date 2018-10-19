@@ -5,6 +5,10 @@ python:
 env:
   - MYSQL_HOST="127.0.0.1"
 
+install:
+  - pip install pipenv
+  - pipenv install --dev
+
 before_script:
   - sudo service mysql stop
   - docker-compose up -d

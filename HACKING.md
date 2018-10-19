@@ -9,17 +9,11 @@ This module is TDD, the setup is inspired by ansible
 
 ## development setup
 
-### python virtualenv
+### pipenv
 
-For python-development it's recommended to use [virtualenv](https://virtualenv.pypa.io/en/stable/).
+For python-development it's common to use [pipenv](https://pipenv.readthedocs.io/en/latest/).
 
 Combined with [direnv](https://direnv.net/) you just need to cd into this directory.
-
-### required packages
-
-Once your virtualenv is setup, install the required packages via:
-
-    $ pip install -r requirements.txt
 
 ### database
 

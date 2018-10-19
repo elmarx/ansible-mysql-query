@@ -1,4 +1,0 @@
-ansible
-MySQL-python
-pytest
-pytest-mock
