@@ -121,6 +121,7 @@ def tuples_weak_equals(a, b):
 def change_required(state, cursor, table, identifiers, desired_values):
     """
     check if a change is required
+    :param state: state, either 'present' or 'absent'
     :param cursor: cursor object able to execute queries
     :param table: name of the table to look into
     :type table: str
@@ -146,9 +147,16 @@ def change_required(state, cursor, table, identifiers, desired_values):
         else:
             raise e
 
+    # check for state "absent" — which is the easy case here
     if state == 'absent':
-        return NO_ACTION_REQUIRED if res == 0 else DELETE_REQUIRED
+        # no such row, and we dont want such row, great:
+        if res == 0:
+            return NO_ACTION_REQUIRED
+        else:
+            # we have a row but don't want it
+            return DELETE_REQUIRED
 
+    # for state "present"
     if res == 0:
         return INSERT_REQUIRED
 
@@ -167,6 +175,7 @@ def change_required(state, cursor, table, identifiers, desired_values):
 def execute_action(cursor, action, table, identifier, values, defaults):
     """
     when not running in check mode, this function carries out the required changes
+    :param action: the actual action to execute
     :rtype: dict
     :param cursor:
     :param table:
