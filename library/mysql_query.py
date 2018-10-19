@@ -118,6 +118,32 @@ def tuples_weak_equals(a, b):
     return False
 
 
+def check_row_exists(cursor, table, identifiers):
+    """
+    check a specified row only for existence
+    :param cursor: cursor object able to execute queries
+    :param table: name of the table to look into
+    :param identifiers:
+    :return: True if the row exists, False otherwise
+    """
+    query = "select exists(select 1 from {table} where {values})".format(
+        table=table,
+        values=" AND ".join(["%s='%s'" % x for x in identifiers.items()]),
+    )
+
+    try:
+        res = cursor.execute(query)
+    except MySQLdb.ProgrammingError as e:
+        (errcode, message) = e.args
+        if errcode == 1146:
+            return ERR_NO_SUCH_TABLE
+        else:
+            raise e
+
+    exists, = cursor.fetchone()
+    return exists == 1
+
+
 def change_required(state, cursor, table, identifiers, desired_values):
     """
     check if a change is required
@@ -132,10 +158,27 @@ def change_required(state, cursor, table, identifiers, desired_values):
     :return: one of DELETE_REQUIRED, INSERT_REQUIRED, UPDATE_REQUIRED or NO_ACTION_REQUIRED
     :rtype: int
     """
-    query = "select %(columns)s from %(table)s where %(values)s" % dict(
+
+    # first, let's determine if we do a simple existence-check, or if we also have to compare values
+    if state == "absent" or not desired_values:
+        row_exists = check_row_exists(cursor, table, identifiers)
+
+        if state == "absent" and row_exists:
+            return DELETE_REQUIRED
+
+        if state == "present" and not row_exists:
+            return INSERT_REQUIRED
+
+        # other cases:  state == "absent" and not row_exists:
+        #               state == "present" and row_exists
+        # both require no action
+        return NO_ACTION_REQUIRED
+
+    # ok, we have to compare values, so let's make a query selecting all the columns with desired_values
+    query = "select {columns} from {table} where {values}".format(
         table=table,
-        columns=", ".join(desired_values.keys()) if state == 'present' else '*',
-        values=" AND ".join(map(lambda x: "%s='%s'" % x, identifiers.items())),
+        columns=", ".join(desired_values.keys()),
+        values=" AND ".join(["%s='%s'" % x for x in identifiers.items()]),
     )
 
     try:
@@ -147,18 +190,11 @@ def change_required(state, cursor, table, identifiers, desired_values):
         else:
             raise e
 
-    # check for state "absent" — which is the easy case here
-    if state == 'absent':
-        # no such row, and we dont want such row, great:
-        if res == 0:
-            return NO_ACTION_REQUIRED
-        else:
-            # we have a row but don't want it
-            return DELETE_REQUIRED
-
-    # for state "present"
+    # if no row has been found at all, an insert is required
     if res == 0:
         return INSERT_REQUIRED
+
+    # a row has been found, so we need to compare the returned values:
 
     # bring the values argument into shape to compare directly to fetchone() result
     expected_query_result = tuple(desired_values.values())
