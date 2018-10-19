@@ -64,6 +64,28 @@ class MysqlQueryCheckTest(unittest.TestCase):
         self.assertFalse(result['changed'], 'no changed required is detected')
         self.assertEquals(self.f.count_key_value_example(), 1, 'no additional row has been inserted in check-mode')
 
+    def test_no_change_required_for_numeric_ids(self):
+        # insert a row that does not need to be updated
+        insert_id = self.f.insert_into_key_value_example('arbitrary', 42)
+
+        set_module_args(
+            login_user=MYSQL_CONNECTION_PARAMS['user'],
+            name=MYSQL_CONNECTION_PARAMS['db'],
+            login_password=MYSQL_CONNECTION_PARAMS['passwd'],
+            login_host=MYSQL_CONNECTION_PARAMS['host'],
+            table='key_value_example',
+            identifiers=dict(id=insert_id),
+            defaults=dict(value=23, name="default_arbitrary"),
+        )
+
+        with self.assertRaises(AnsibleExitJson) as e:
+            self.module.main()
+
+        result = e.exception.args[0]
+        self.assertIn('changed', result)
+        self.assertFalse(result['changed'], 'no changed required is detected')
+        self.assertEquals(self.f.count_key_value_example(), 1, 'no additional row has been inserted in check-mode')
+
     def test_update_required(self):
         # insert a row that does need to be updated (4 vs 8)
         self.f.insert_into_key_value_example('testUpdateRequired_myKey', 4)
