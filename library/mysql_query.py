@@ -68,18 +68,10 @@ EXAMPLES = """
 """
 
 from contextlib import closing
-from ansible.module_utils.basic import AnsibleModule
-
-try:
-    import MySQLdb
-except ImportError:
-    mysqldb_found = False
-else:
-    mysqldb_found = True
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.database import mysql_quote_identifier
-from ansible.module_utils.mysql import mysql_connect, mysqldb_found
+from ansible.module_utils.mysql import mysql_connect, mysql_driver, mysql_driver_fail_msg
 from ansible.module_utils._text import to_native
 
 DELETE_REQUIRED = 0
@@ -146,7 +138,7 @@ def check_row_exists(cursor, table, identifiers):
 
     try:
         res = cursor.execute(query)
-    except MySQLdb.ProgrammingError as e:
+    except mysql_driver.ProgrammingError as e:
         (errcode, message) = e.args
         if errcode == 1146:
             return ERR_NO_SUCH_TABLE
@@ -196,7 +188,7 @@ def change_required(state, cursor, table, identifiers, desired_values):
 
     try:
         res = cursor.execute(query)
-    except MySQLdb.ProgrammingError as e:
+    except mysql_driver.ProgrammingError as e:
         (errcode, message) = e.args
         if errcode == 1146:
             return ERR_NO_SUCH_TABLE
@@ -306,7 +298,7 @@ def build_connection_parameter(params):
 
 def connect(connection, module):
     try:
-        db_connection = MySQLdb.connect(**connection)
+        db_connection = mysql_driver.connect(**connection)
         return db_connection
     except Exception as e:
         module.fail_json(msg="Error connecting to mysql database: %s" % str(e))
@@ -350,8 +342,8 @@ def main():
         supports_check_mode=True
     )
 
-    if not mysqldb_found:
-        module.fail_json(msg="the python mysqldb module is required")
+    if mysql_driver is None:
+        module.fail_json(msg=mysql_driver_fail_msg)
 
     # mysql_quote all identifiers and get the parameters into shape
     table = mysql_quote_identifier(module.params['table'], 'table')
