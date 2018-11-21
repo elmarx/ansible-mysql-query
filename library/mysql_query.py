@@ -71,7 +71,18 @@ from contextlib import closing
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.database import mysql_quote_identifier
-from ansible.module_utils.mysql import mysql_connect, mysql_driver, mysql_driver_fail_msg
+
+# make mysql-query backward compatible with ansible < 2.7.2 
+try:
+    from ansible.module_utils.mysql import mysql_connect, mysql_driver, mysql_driver_fail_msg
+except ImportError:
+    from ansible.module_utils.mysql import mysql_connect, mysqldb_found
+    if mysqldb_found:
+        import MySQLdb as mysql_driver
+    else:
+        mysql_driver = None
+        mysql_driver_fail_msg = 'The MySQL-python module is required.'
+
 from ansible.module_utils._text import to_native
 
 DELETE_REQUIRED = 0
