@@ -8,5 +8,3 @@ services:
       MYSQL_DATABASE: "ansible-mysql-query-test"
     ports:
       - "3306:3306"
-
-
