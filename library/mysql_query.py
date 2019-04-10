@@ -65,6 +65,18 @@ EXAMPLES = """
     defaults:
       default1: 125
       default2: one-hundred-2
+
+- name: Check a row
+  mysql_query.py:
+    name: ansible-playbook-example
+    table: simple_table
+    login_host: ::1
+    login_user: root
+    login_password: password
+    state: check_record
+    identifiers:
+      identifier1: 14
+      identifier2: 'eighteen'
 """
 
 from contextlib import closing
@@ -90,6 +102,8 @@ INSERT_REQUIRED = 1
 UPDATE_REQUIRED = 2
 NO_ACTION_REQUIRED = 3
 ERR_NO_SUCH_TABLE = 4
+CHECKED_RECORD_NOT_FOUND = 5
+CHECKED_RECORD_FOUND = 6
 
 
 def weak_equals(a, b):
@@ -163,7 +177,7 @@ def check_row_exists(cursor, table, identifiers):
 def change_required(state, cursor, table, identifiers, desired_values):
     """
     check if a change is required
-    :param state: state, either 'present' or 'absent'
+    :param state: state, either 'present' or 'absent' or 'check_record'
     :param cursor: cursor object able to execute queries
     :param table: name of the table to look into
     :type table: str
@@ -171,7 +185,7 @@ def change_required(state, cursor, table, identifiers, desired_values):
     :type identifiers: dict
     :param desired_values: a list of tuples (column name, values) that the record should match
     :type desired_values: dict
-    :return: one of DELETE_REQUIRED, INSERT_REQUIRED, UPDATE_REQUIRED or NO_ACTION_REQUIRED
+    :return: one of DELETE_REQUIRED, INSERT_REQUIRED, UPDATE_REQUIRED, CHECKED_RECORD_NOT_FOUND, CHECKED_RECORD_FOUND  or NO_ACTION_REQUIRED
     :rtype: int
     """
 
@@ -184,6 +198,11 @@ def change_required(state, cursor, table, identifiers, desired_values):
 
         if state == "present" and not row_exists:
             return INSERT_REQUIRED
+
+        if state == "check_record" and not row_exists:
+            return CHECKED_RECORD_NOT_FOUND
+        elif state == "check_record" and row_exists:
+            return CHECKED_RECORD_FOUND
 
         # other cases:  state == "absent" and not row_exists:
         #               state == "present" and row_exists
@@ -339,14 +358,13 @@ def main():
             login_port=dict(default=3306, type='int'),
             login_unix_socket=dict(default=None),
             name=dict(required=True, aliases=['db']),
-            state=dict(default="present", choices=['absent', 'present']),
+            state=dict(default="present", choices=['absent', 'present', 'check_record']),
 
             table=dict(required=True),
 
             identifiers=dict(required=True, type='dict'),
             values=dict(default=None, type='dict'),
             defaults=dict(default=None, type='dict'),
-
             #allow_insert=dict(default=False, type='bool'),
             #limit=dict(default=1, type='int'),
         ),
@@ -361,12 +379,14 @@ def main():
     identifiers = dict(extract_column_value_maps(module.params['identifiers']))
     values = dict(extract_column_value_maps(module.params['values']))
     defaults = dict(extract_column_value_maps(module.params['defaults']))
-
+    
     exit_messages = {
         DELETE_REQUIRED: dict(changed=True, msg='Record needs to be deleted'),
         INSERT_REQUIRED: dict(changed=True, msg='No such record, need to insert'),
         UPDATE_REQUIRED: dict(changed=True, msg='Records needs to be updated'),
         NO_ACTION_REQUIRED: dict(changed=False),
+        CHECKED_RECORD_NOT_FOUND: dict(changed=False, msg='No such record, need to insert'),
+        CHECKED_RECORD_FOUND: dict(changed=False, msg='Record Exist, no need to insert'),
         ERR_NO_SUCH_TABLE: dict(failed=True, msg='No such table %s' % table)
     }
 
@@ -377,7 +397,9 @@ def main():
         # if we're in check mode, there's no action required, or we already failed: directly set the exit_message
         if module.check_mode or required_action == NO_ACTION_REQUIRED or failed(required_action):
             exit_message = exit_messages[required_action]
-        else:
+        elif required_action == CHECKED_RECORD_NOT_FOUND or required_action == CHECKED_RECORD_FOUND:
+            exit_message = exit_messages[required_action]
+        else: 
             # otherwise, execute the required action to get the exit message
             exit_message = execute_action(db_connection.cursor(), required_action, table, identifiers, values, defaults)
             db_connection.commit()
