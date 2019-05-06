@@ -72,7 +72,7 @@ from contextlib import closing
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.database import mysql_quote_identifier
 
-# make mysql-query backward compatible with ansible < 2.7.2 
+# make mysql-query backward compatible with ansible < 2.7.2
 try:
     from ansible.module_utils.mysql import mysql_connect, mysql_driver, mysql_driver_fail_msg
 except ImportError:
@@ -260,7 +260,7 @@ def update_record(cursor, table, identifiers, values):
 
 
 def insert_record(cursor, table, identifiers, values, defaults):
-    row_data = dict(identifiers.items() + values.items() + defaults.items())
+    row_data = dict(list(identifiers.items()) + list(values.items()) + list(defaults.items()))
     value_placeholder = ", ".join(["%s"] * len(row_data))
 
     query = "insert into {table} ({cols}) values ({value_placeholder})".format(
