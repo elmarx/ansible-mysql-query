@@ -1,0 +1,38 @@
+#!/usr/bin/env ansible-playbook
+---
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name: update a row
+      mysql_query:
+        name: ansible-playbook-example
+        table: simple_table
+        login_host: ::1
+        login_user: root
+        login_password: password
+        identifiers:
+          identifier1: 4
+          identifier2: 'eight'
+        values:
+          value1: 42
+          value2: 'myvalue'
+        defaults:
+          default1: can be anything, will be ignored for update
+          default2: will not change
+
+    - name: insert a row
+      mysql_query:
+        name: ansible-playbook-example
+        table: simple_table
+        login_host: ::1
+        login_user: root
+        login_password: password
+        identifiers:
+          identifier1: 14
+          identifier2: 'eighteen'
+        values:
+          value1: 115
+          value2: 'one-hundred-sixteen'
+        defaults:
+          default1: 125
+          default2: one-hundred-25

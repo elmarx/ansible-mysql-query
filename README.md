@@ -24,6 +24,7 @@ Example playbook
 ### A complete example that ensures a record is present in a given table.
 
 ```yaml
+
 ---
 - hosts: all
   roles:
@@ -60,6 +61,7 @@ Thus:
 ### A complete example that ensures a record is not present in a given table.
 
 ```yaml
+
 ---
 - hosts: all
   roles:
@@ -83,3 +85,6 @@ Thus:
 Make sure you have a running mysql server (e.g.: use the *docker-compose.yml*-file) and update the connection-parameters if necessary.
 
 Run via `ansible-playbook -i demo.yml` (or even simpler `./demo.yml`) and undo (to start all over) with `ansible-playbook -i reset.yml`.
+
+After running `./demo.yml`, you can run `./checkmode-demo.yml -C` to test ansible's [check mode](https://docs.ansible.com/ansible/latest/user_guide/playbooks_checkmode.html).
+Just run `./demo.yml` and `./checkmode-demo.yml` a few times with `-C` and without `-C` to get a feel for it.
