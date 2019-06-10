@@ -4,10 +4,10 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-ansible = "*"
-pytest = "*"
-pytest-mock = "*"
-mysql-python = "*"
+ansible = "~=2.7.11"
+pytest = "~=4.6.2"
+pytest-mock = "~=1.10.4"
+mysql-python = "~=1.2.5"
 
 [dev-packages]
 
