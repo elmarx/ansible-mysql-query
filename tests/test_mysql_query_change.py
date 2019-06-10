@@ -1,3 +1,4 @@
+import six
 from ansible.compat.tests import unittest
 from ansible.compat.tests.mock import patch
 from ansible.module_utils import basic
@@ -45,8 +46,8 @@ class MysqlQueryChangeTest(unittest.TestCase):
         self.assertTrue(result['changed'], 'the database has been changed')
         self.assertEquals(self.f.count_change_example(), 1, 'a row has been inserted')
         row = self.f.query_change_example('do_backups', 4)
-        self.assertItemsEqual((8, 'fifteen'), row[3:5], 'values were inserted')
-        self.assertItemsEqual((16, 42, 'thirty-two'), row[5:8], 'row has been inserted with default values')
+        six.assertCountEqual(self, (8, 'fifteen'), row[3:5], 'values were inserted')
+        six.assertCountEqual(self, (16, 42, 'thirty-two'), row[5:8], 'row has been inserted with default values')
 
     def test_update_required(self):
         self.f.insert_into_change_example(['do_syncs', '5'], [42, 'four'], [8, 16, 'bar'])
@@ -70,8 +71,8 @@ class MysqlQueryChangeTest(unittest.TestCase):
         self.assertRegexpMatches(result['msg'], 'Successfully updated')
         self.assertEquals(self.f.count_change_example(), 1, 'no additional row has been inserted')
         row = self.f.query_change_example('do_syncs', '5')
-        self.assertItemsEqual((43, 'five'), row[3:5], 'values have been updated')
-        self.assertItemsEqual((8, 16, 'bar'), row[5:8], 'defaults have not been changed')
+        six.assertCountEqual(self, (43, 'five'), row[3:5], 'values have been updated')
+        six.assertCountEqual(self, (8, 16, 'bar'), row[5:8], 'defaults have not been changed')
 
     def test_delete_required(self):
         self.f.insert_into_change_example(['do_syncs', '5'], [42, 'four'], [8, 16, 'bar'])

@@ -1,5 +1,5 @@
 import unittest
-
+from builtins import int
 from library.mysql_query import weak_equals
 
 
@@ -20,10 +20,10 @@ class WeakEquals(unittest.TestCase):
         self.assertFalse(weak_equals(1, "2"))
 
     def test_string_long(self):
-        self.assertTrue(weak_equals("1", 1L))
-        self.assertTrue(weak_equals(1L, "1"))
-        self.assertFalse(weak_equals("2", 1L))
-        self.assertFalse(weak_equals(1L, "2"))
+        self.assertTrue(weak_equals("1", int(1)))
+        self.assertTrue(weak_equals(int(1), "1"))
+        self.assertFalse(weak_equals("2", int(1)))
+        self.assertFalse(weak_equals(int(1), "2"))
 
     def test_string_float(self):
         self.assertTrue(weak_equals("1.1", 1.1))

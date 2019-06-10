@@ -8,6 +8,8 @@ ansible = "~=2.7.11"
 pytest = "~=4.6.2"
 pytest-mock = "~=1.10.4"
 PyMySQL = "~=0.9.3"
+future = "~=0.17.1"
+six = "~=1.12.0"
 
 [dev-packages]
 
