@@ -1,5 +1,5 @@
-import MySQLdb as Db
 from tests.settings import MYSQL_CONNECTION_PARAMS
+import pymysql.cursors
 
 
 class Fixture:
@@ -8,7 +8,7 @@ class Fixture:
 
     def cursor(self):
         if not self._connection:
-            self._connection = Db.connect(**MYSQL_CONNECTION_PARAMS)
+            self._connection = pymysql.connect(**MYSQL_CONNECTION_PARAMS)
 
         return self._connection.cursor()
 
@@ -36,7 +36,7 @@ class Fixture:
     def create_database():
         create_connection_params = MYSQL_CONNECTION_PARAMS.copy()
         db = create_connection_params.pop('db')
-        con = Db.connect(**create_connection_params)
+        con = pymysql.connect(**create_connection_params)
 
         cur = con.cursor()
         cur.execute('DROP DATABASE IF EXISTS `{0}`;'.format(db))

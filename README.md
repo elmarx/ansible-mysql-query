@@ -12,7 +12,10 @@ Install via ansible-galaxy, `ansible-galaxy install zauberpony.mysql-query`, or 
 
 ### Requirements:
 
-python bindings for mysql ([python-mysqldb](https://packages.debian.org/jessie/python-mysqldb) on Debian, MySQL-python on RedHat/Fedora), just like the core mysql_* modules.
+python bindings for mysql (just like the core mysql_* modules):
+
+- MySQLdb (Python 2.x only)
+- PyMySQL (Python 2.7 and python 3.x)
 
 
 Example playbook
