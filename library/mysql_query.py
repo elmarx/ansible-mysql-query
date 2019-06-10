@@ -255,7 +255,7 @@ def update_record(cursor, table, identifiers, values):
 
     query = "UPDATE {0} set {1} where {2} limit 1".format(table, value, where)
 
-    cursor.execute(query, tuple(values.values() + identifiers.values()))
+    cursor.execute(query, tuple(list(values.values()) + list(identifiers.values())))
     return dict(changed=True, msg='Successfully updated one row')
 
 
