@@ -58,7 +58,8 @@ galaxy_info:
     - mysql
     - mariadb
     - database
-    - mysql-query
+    - mysql_query
+    - query
 
 dependencies: []
   # List your role dependencies here, one per line. Be sure to remove the '[]' above,
