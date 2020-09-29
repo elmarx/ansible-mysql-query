@@ -54,7 +54,7 @@ Given a table `simple_table` with columns (*id*, *email*, *role*, *department*, 
   - if the row does exist: check if the ***values*** (role, department) match the given values, if not: update
 
 Thus:
-- *identifieres* are being used to check for existence and to find a row
+- *identifiers* are being used to check for existence and to find a row
 - *defaults* are being used as default values if the row is not present (i.e.: only used for insert)
 - *values* are the state of the row that ansible ensures
 
